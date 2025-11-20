@@ -1,0 +1,143 @@
+import { randomBytes } from 'crypto';
+
+export interface ReferralCodeOptions {
+  length?: number;
+  prefix?: string;
+}
+
+export class ReferralCodeGenerator {
+  private static readonly DEFAULT_PREFIX = 'USD-AI';
+  private static readonly DEFAULT_LENGTH = 8;
+  private static readonly CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  static generateCode(options: ReferralCodeOptions = {}): string {
+    const { 
+      length = this.DEFAULT_LENGTH, 
+      prefix = this.DEFAULT_PREFIX 
+    } = options;
+
+    const randomCode = this.generateRandomString(length);
+    return `${prefix}-${randomCode}`;
+  }
+
+  static generateApiKey(length: number = 64): string {
+    return randomBytes(length / 2).toString('hex');
+  }
+
+  private static generateRandomString(length: number): string {
+    const bytes = randomBytes(length);
+    let result = '';
+    
+    for (let i = 0; i < length; i++) {
+      result += this.CHARACTERS[bytes[i] % this.CHARACTERS.length];
+    }
+    
+    return result;
+  }
+
+  static validateReferralCode(code: string): boolean {
+    const pattern = /^USD-AI-[A-Za-z0-9]{8}$/;
+    return pattern.test(code);
+  }
+
+  static extractCodeFromRef(ref: string): string | null {
+    if (this.validateReferralCode(ref)) {
+      return ref;
+    }
+    return null;
+  }
+
+  static isValidFormat(code: string): { valid: boolean; error?: string } {
+    if (!code) {
+      return { valid: false, error: 'Referral code is required' };
+    }
+
+    if (!this.validateReferralCode(code)) {
+      return { 
+        valid: false, 
+        error: 'Invalid format. Expected: USD-AI-[8 characters]' 
+      };
+    }
+
+    return { valid: true };
+  }
+}
+
+export interface ReferralContext {
+  referralCode: string;
+  timestamp: number;
+  referrerEmail?: string;
+}
+
+export class ReferralCookieManager {
+  private static readonly COOKIE_NAME = 'usdai_ref';
+  private static readonly COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+  static setCookie(response: Response, context: ReferralContext): void {
+    const cookieValue = this.encodeCookieValue(context);
+    const expires = new Date(Date.now() + this.COOKIE_MAX_AGE);
+    
+    response.headers.set('Set-Cookie', 
+      `${this.COOKIE_NAME}=${cookieValue}; ` +
+      `Path=/; ` +
+      `Expires=${expires.toUTCString()}; ` +
+      `HttpOnly; ` +
+      `SameSite=Lax; ` +
+      `Secure`
+    );
+  }
+
+  static getCookie(request: Request): ReferralContext | null {
+    const cookieHeader = request.headers.get('cookie');
+    if (!cookieHeader) return null;
+
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const cookieValue = cookies[this.COOKIE_NAME];
+    if (!cookieValue) return null;
+
+    return this.decodeCookieValue(cookieValue);
+  }
+
+  static clearCookie(response: Response): void {
+    response.headers.set('Set-Cookie', 
+      `${this.COOKIE_NAME}=; ` +
+      `Path=/; ` +
+      `Expires=Thu, 01 Jan 1970 00:00:00 GMT; ` +
+      `HttpOnly; ` +
+      `SameSite=Lax`
+    );
+  }
+
+  private static encodeCookieValue(context: ReferralContext): string {
+    return Buffer.from(JSON.stringify(context)).toString('base64');
+  }
+
+  private static decodeCookieValue(value: string): ReferralContext | null {
+    try {
+      const decoded = Buffer.from(value, 'base64').toString('utf-8');
+      const context = JSON.parse(decoded) as ReferralContext;
+      
+      // Check if cookie is expired
+      const now = Date.now();
+      if (now - context.timestamp > this.COOKIE_MAX_AGE) {
+        return null;
+      }
+      
+      return context;
+    } catch {
+      return null;
+    }
+  }
+
+  static isValidContext(context: ReferralContext | null): boolean {
+    if (!context) return false;
+    
+    const validation = ReferralCodeGenerator.isValidFormat(context.referralCode);
+    return validation.valid;
+  }
+}
