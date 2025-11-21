@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession as nextAuthGetServerSession } from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
 import { TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
 import { AuthUserService } from "@/features/signing/services/signing.service";
@@ -9,15 +9,6 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.TWITTER_CLIENT_ID!,
       clientSecret: process.env.TWITTER_CLIENT_SECRET!,
       version: "2.0",
-      authorization: {
-        url: "https://twitter.com/i/oauth2/authorize",
-        params: {
-          scope: "users.read tweet.read offline.access",
-          response_type: "code",
-          code_challenge_method: "S256",
-        },
-      },
-      token: "https://api.twitter.com/2/oauth2/token",
       userinfo: {
         url: "https://api.twitter.com/2/users/me",
         params: {
@@ -25,6 +16,7 @@ export const authOptions: NextAuthOptions = {
         },
       },
       profile(profile) {
+        console.log(`[TWITTER-PROFILE] Processing profile for user: @${profile.data?.username}`);
         const userData = profile.data;
         const twitterData: TwitterUserData = {
           created_at: userData.created_at || "",
@@ -51,6 +43,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      // Initial sign-in: process user data
       if (user) {
         try {
           const userData = {
@@ -61,41 +54,112 @@ export const authOptions: NextAuthOptions = {
             twitterData: user.twitterData as TwitterUserData,
           };
 
-          const result = await AuthUserService.processAuthenticatedUser(userData);
+          // Add timeout protection to prevent OAuth callback delays
+          const result = await Promise.race([
+            AuthUserService.processAuthenticatedUser(userData),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Database operation timeout')), 3000)
+            )
+          ]);
 
-          // Keep the original Twitter data in the JWT token
+          // Store successful results
           token.twitterData = userData.twitterData;
-          token.dbUserId = result.user._id;
+          token.dbUserId = result.user._id?.toString();
           token.isNewUser = result.isNewUser;
           token.referralCode = result.referralCode;
+          token.processingComplete = true;
+          token.needsProcessing = false;
         } catch (error) {
-          console.error('Failed to process authenticated user:', error);
+          console.error('Failed to process authenticated user during OAuth:', error);
+
+          // Still allow authentication to succeed - defer processing
           token.twitterData = user.twitterData;
+          token.tempUserId = user.id;
+          token.tempUserData = {
+            id: user.id!,
+            name: user.name!,
+            email: user.email,
+            image: user.image,
+            twitterData: user.twitterData as TwitterUserData,
+          };
+          token.needsProcessing = true;
+          token.processingComplete = false;
         }
       }
+
+      // Subsequent requests: retry deferred processing if needed
+      else if (token.needsProcessing && token.tempUserData && !token.processingComplete) {
+        try {
+          const result = await Promise.race([
+            AuthUserService.processAuthenticatedUser(token.tempUserData),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Deferred processing timeout')), 2000)
+            )
+          ]);
+
+          // Update token - these changes WILL persist from jwt callback
+          token.dbUserId = result.user._id?.toString();
+          token.isNewUser = result.isNewUser;
+          token.referralCode = result.referralCode;
+          token.needsProcessing = false;
+          token.processingComplete = true;
+          delete token.tempUserData;
+          delete token.tempUserId;
+        } catch (error) {
+          console.error('Failed deferred user processing:', error);
+          // Keep needsProcessing true to retry on next request
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
+      // Always include Twitter data
       if (token.twitterData) {
         session.user.twitterData = token.twitterData as TwitterUserData;
       }
-      if (token.dbUserId) {
-        session.user.dbUserId = token.dbUserId as string;
-      }
-      if (token.isNewUser !== undefined) {
-        session.user.isNewUser = token.isNewUser as boolean;
-      }
-      if (token.referralCode) {
-        session.user.referralCode = token.referralCode as string;
+
+      // Transfer processed data to session
+      if (token.processingComplete) {
+        if (token.dbUserId) {
+          session.user.dbUserId = token.dbUserId as string;
+        }
+        if (token.isNewUser !== undefined) {
+          session.user.isNewUser = token.isNewUser as boolean;
+        }
+        if (token.referralCode) {
+          session.user.referralCode = token.referralCode as string;
+        }
+      } else if (token.needsProcessing) {
+        // Signal to client that background processing may be needed
+        session.user.needsBackgroundProcessing = true;
       }
 
       return session;
     },
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NEXTAUTH_DEBUG === "true",
+  // Cookie configuration for PKCE - critical for localhost development
+  cookies: {
+    pkceCodeVerifier: {
+      name: "next-auth.pkce.code_verifier",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    state: {
+      name: "next-auth.state",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
 };
 
-export const getServerSession = () => {
-  // This will be used for server-side session access
-  return null;
-};
+export const getServerSession = () => nextAuthGetServerSession(authOptions);

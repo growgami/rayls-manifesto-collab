@@ -1,4 +1,4 @@
-import { TwitterUserData } from "@/features/auth/types/user.types";
+import { TwitterUserData } from "./user.types";
 
 declare module "next-auth" {
   interface Session {
@@ -11,6 +11,7 @@ declare module "next-auth" {
       dbUserId?: string;
       isNewUser?: boolean;
       referralCode?: string;
+      needsBackgroundProcessing?: boolean;
     };
   }
 
@@ -29,5 +30,15 @@ declare module "next-auth/jwt" {
     dbUserId?: string;
     isNewUser?: boolean;
     referralCode?: string;
+    needsProcessing?: boolean;
+    processingComplete?: boolean;
+    tempUserId?: string;
+    tempUserData?: {
+      id: string;
+      name: string;
+      email?: string;
+      image?: string;
+      twitterData: TwitterUserData;
+    };
   }
 }

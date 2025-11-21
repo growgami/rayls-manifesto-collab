@@ -1,9 +1,11 @@
 "use client";
 
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
+import { useTracking } from "@/features/tracking/hooks/useTracking.hook";
 
 export default function AuthTestPage() {
   const { isAuthenticated, isLoading, user, twitterData, signIn, signOut } = useAuth();
+  const { sessionId, utmId, activeTime, isTracking, ipId, ipAddress, isLoading: trackingLoading, error: trackingError } = useTracking();
 
   if (isLoading) {
     return (
@@ -116,6 +118,44 @@ export default function AuthTestPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-8 bg-white rounded-lg p-6 shadow-sm border">
+          <h3 className="text-lg font-medium mb-4">Tracking Data</h3>
+          {trackingLoading ? (
+            <p className="text-gray-500">Loading tracking data...</p>
+          ) : trackingError ? (
+            <p className="text-red-500">Error: {trackingError}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Session ID</label>
+                <p className="text-sm text-gray-900 font-mono">{sessionId}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">UTM ID</label>
+                <p className="text-sm text-gray-900 font-mono">{utmId || "Pending..."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">IP ID</label>
+                <p className="text-sm text-gray-900 font-mono">{ipId || "Pending..."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">IP Address</label>
+                <p className="text-sm text-gray-900">{ipAddress || "Unknown"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Active Time</label>
+                <p className="text-sm text-gray-900">{Math.round(activeTime / 1000)}s</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Tracking Status</label>
+                <p className={`text-sm font-medium ${isTracking ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {isTracking ? "● Active" : "○ Paused"}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
