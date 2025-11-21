@@ -1,5 +1,5 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
-import { ReferralModel, IReferralCreate } from '@/features/referral/models/referral.model';
+import { ReferralModel, IReferralCreate } from '@/features/signing/modules/referral/models/referral.model';
 
 export class ReferralDbService {
   static async createReferralRecord(userData: {

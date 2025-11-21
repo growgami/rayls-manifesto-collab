@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { ReferralDbService } from '@/features/referral/utils/referralDb.util';
+import { ReferralDbService } from '@/features/signing/modules/referral/utils/referralDb.util';
 
 export interface ReferralCodeOptions {
   length?: number;

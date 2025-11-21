@@ -1,6 +1,5 @@
 import { getCollection, COLLECTIONS } from "@/shared/lib/mongodb.lib";
-import { TwitterUserData } from "@/features/auth/types/user.types";
-import { ReferralCodeGenerator } from "@/features/referral/services/referralGenerator.service";
+import { TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
 
 export interface UserDocument {
   _id?: string;
@@ -49,7 +48,10 @@ export class UserService {
           { returnDocument: 'after' }
         );
 
-        return updatedUser as UserDocument;
+        if (!updatedUser) {
+          throw new Error('Failed to update user');
+        }
+        return updatedUser as unknown as UserDocument;
       } else {
         // Create the user
         const newUser: Omit<UserDocument, '_id'> = {
@@ -62,12 +64,6 @@ export class UserService {
         };
 
         const result = await usersCollection.insertOne(newUser);
-
-        // Create referral record using dedicated service
-        await ReferralCodeGenerator.createUserReferral({
-          xId: userData.id,
-          username: userData.twitterData.username
-        });
 
         return {
           _id: result.insertedId.toString(),

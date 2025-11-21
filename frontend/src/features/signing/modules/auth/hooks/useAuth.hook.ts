@@ -1,5 +1,5 @@
 import { useSession, signIn, signOut } from "next-auth/react";
-import { AuthSession, TwitterUserData } from "@/features/auth/types/user.types";
+import { AuthSession, TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
 
 export const useAuth = () => {
   const { data: session, status } = useSession();

@@ -1,4 +1,3 @@
-import NextAuth from "next-auth";
 import { TwitterUserData } from "@/features/auth/types/user.types";
 
 declare module "next-auth" {
@@ -9,6 +8,9 @@ declare module "next-auth" {
       email?: string;
       image?: string;
       twitterData?: TwitterUserData;
+      dbUserId?: string;
+      isNewUser?: boolean;
+      referralCode?: string;
     };
   }
 
@@ -24,5 +26,8 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     twitterData?: TwitterUserData;
+    dbUserId?: string;
+    isNewUser?: boolean;
+    referralCode?: string;
   }
 }

@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
-import { TwitterUserData } from "@/features/auth/types/user.types";
-import { UserService } from "@/features/auth/utils/userDb.util";
+import { TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
+import { AuthUserService } from "@/features/signing/services/signing.service";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -61,13 +61,15 @@ export const authOptions: NextAuthOptions = {
             twitterData: user.twitterData as TwitterUserData,
           };
 
-          const savedUser = await UserService.findOrCreateUser(userData);
+          const result = await AuthUserService.processAuthenticatedUser(userData);
 
           // Keep the original Twitter data in the JWT token
           token.twitterData = userData.twitterData;
-          token.dbUserId = savedUser._id;
+          token.dbUserId = result.user._id;
+          token.isNewUser = result.isNewUser;
+          token.referralCode = result.referralCode;
         } catch (error) {
-          console.error('Failed to save user to database:', error);
+          console.error('Failed to process authenticated user:', error);
           token.twitterData = user.twitterData;
         }
       }
@@ -80,21 +82,15 @@ export const authOptions: NextAuthOptions = {
       if (token.dbUserId) {
         session.user.dbUserId = token.dbUserId as string;
       }
-
-      if (session.user?.twitterData?.id) {
-        try {
-          await UserService.updateLastLogin(session.user.twitterData.id);
-        } catch (error) {
-          console.error('Failed to update last login:', error);
-        }
+      if (token.isNewUser !== undefined) {
+        session.user.isNewUser = token.isNewUser as boolean;
+      }
+      if (token.referralCode) {
+        session.user.referralCode = token.referralCode as string;
       }
 
       return session;
     },
-  },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
   },
   debug: process.env.NODE_ENV === "development",
 };

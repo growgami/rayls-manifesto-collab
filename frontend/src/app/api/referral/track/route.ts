@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ReferralModel } from '@/features/referral/models/referral.model';
-import { ReferralCodeGenerator, ReferralCookieManager, ReferralContext } from '@/features/referral/services/referralGenerator.service';
+import { ReferralModel } from '@/features/signing/modules/referral/models/referral.model';
+import { ReferralCodeGenerator, ReferralCookieManager, ReferralContext } from '@/features/signing/modules/referral/services/referralGenerator.service';
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 
 export async function GET(request: NextRequest) {

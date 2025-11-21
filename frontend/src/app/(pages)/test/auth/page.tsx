@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/features/auth/hooks/useAuth.hook";
+import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
 
 export default function AuthTestPage() {
   const { isAuthenticated, isLoading, user, twitterData, signIn, signOut } = useAuth();
