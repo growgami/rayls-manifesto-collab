@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { TwitterUserData } from "./user.types";
+import { TwitterUserData } from "@/features/auth/types/user.types";
 
 declare module "next-auth" {
   interface Session {

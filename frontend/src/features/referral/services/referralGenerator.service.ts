@@ -1,23 +1,36 @@
 import { randomBytes } from 'crypto';
+import { ReferralDbService } from '@/features/referral/utils/referralDb.util';
 
 export interface ReferralCodeOptions {
   length?: number;
   prefix?: string;
+  username?: string;
 }
 
 export class ReferralCodeGenerator {
-  private static readonly DEFAULT_PREFIX = 'USD-AI';
+  private static readonly DEFAULT_PREFIX = 'RAYLS';
   private static readonly DEFAULT_LENGTH = 8;
   private static readonly CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
   static generateCode(options: ReferralCodeOptions = {}): string {
-    const { 
-      length = this.DEFAULT_LENGTH, 
-      prefix = this.DEFAULT_PREFIX 
+    const {
+      length = this.DEFAULT_LENGTH,
+      prefix = this.DEFAULT_PREFIX,
+      username
     } = options;
 
+    // Format username: take first 5 letters, capitalize, remove non-alphanumeric
+    const formattedUsername = username
+      ? username.slice(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '')
+      : '';
+
     const randomCode = this.generateRandomString(length);
-    return `${prefix}-${randomCode}`;
+
+    if (formattedUsername) {
+      return `${prefix}-${formattedUsername}-${randomCode}`;
+    } else {
+      return `${prefix}-${randomCode}`;
+    }
   }
 
   static generateApiKey(length: number = 64): string {
@@ -36,8 +49,10 @@ export class ReferralCodeGenerator {
   }
 
   static validateReferralCode(code: string): boolean {
-    const pattern = /^USD-AI-[A-Za-z0-9]{8}$/;
-    return pattern.test(code);
+    // Pattern: RAYLS-[USERNAME]-[8CHARS] or RAYLS-[8CHARS] (legacy)
+    const patternWithUsername = /^RAYLS-[A-Z0-9]{1,5}-[A-Za-z0-9]{8}$/;
+    const patternLegacy = /^RAYLS-[A-Za-z0-9]{8}$/;
+    return patternWithUsername.test(code) || patternLegacy.test(code);
   }
 
   static extractCodeFromRef(ref: string): string | null {
@@ -53,20 +68,56 @@ export class ReferralCodeGenerator {
     }
 
     if (!this.validateReferralCode(code)) {
-      return { 
-        valid: false, 
-        error: 'Invalid format. Expected: USD-AI-[8 characters]' 
+      return {
+        valid: false,
+        error: 'Invalid format. Expected: RAYLS-[USERNAME]-[8 characters] or RAYLS-[8 characters]'
       };
     }
 
     return { valid: true };
+  }
+
+  static async createUserReferral(userData: {
+    xId: string;
+    username: string;
+  }): Promise<string> {
+    let referralCode = '';
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Generate unique referral code with retry logic
+    while (!isUnique && attempts < maxAttempts) {
+      referralCode = this.generateCode({
+        username: userData.username
+      });
+
+      const exists = await ReferralDbService.checkReferralCodeExists(referralCode);
+
+      if (!exists) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!isUnique) {
+      throw new Error('Unable to generate unique referral code. Please try again.');
+    }
+
+    // Create referral database record
+    await ReferralDbService.createReferralRecord({
+      xId: userData.xId,
+      referralCode: referralCode
+    });
+
+    return referralCode;
   }
 }
 
 export interface ReferralContext {
   referralCode: string;
   timestamp: number;
-  referrerEmail?: string;
+  referrerXId?: string;
 }
 
 export class ReferralCookieManager {

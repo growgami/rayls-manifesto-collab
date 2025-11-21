@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCollection, COLLECTIONS } from '@/features/tracking/lib/mongodb.lib';
+import { getCollection, COLLECTIONS } from '@/shared/lib/mongodb.lib';
 import type { IpDataCreateInput } from '@/features/tracking/modules/ip/models/IpData';
 
 export async function POST(request: NextRequest) {

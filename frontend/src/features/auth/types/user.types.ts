@@ -14,6 +14,7 @@ export interface User {
   email?: string;
   image?: string;
   twitterData?: TwitterUserData;
+  dbUserId?: string;
 }
 
 export interface AuthSession {

@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import TwitterProvider from "next-auth/providers/twitter";
 import { TwitterUserData } from "@/features/auth/types/user.types";
+import { UserService } from "@/features/auth/utils/userDb.util";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -51,7 +52,24 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.twitterData = user.twitterData;
+        try {
+          const userData = {
+            id: user.id!,
+            name: user.name!,
+            email: user.email,
+            image: user.image,
+            twitterData: user.twitterData as TwitterUserData,
+          };
+
+          const savedUser = await UserService.findOrCreateUser(userData);
+
+          // Keep the original Twitter data in the JWT token
+          token.twitterData = userData.twitterData;
+          token.dbUserId = savedUser._id;
+        } catch (error) {
+          console.error('Failed to save user to database:', error);
+          token.twitterData = user.twitterData;
+        }
       }
       return token;
     },
@@ -59,6 +77,18 @@ export const authOptions: NextAuthOptions = {
       if (token.twitterData) {
         session.user.twitterData = token.twitterData as TwitterUserData;
       }
+      if (token.dbUserId) {
+        session.user.dbUserId = token.dbUserId as string;
+      }
+
+      if (session.user?.twitterData?.id) {
+        try {
+          await UserService.updateLastLogin(session.user.twitterData.id);
+        } catch (error) {
+          console.error('Failed to update last login:', error);
+        }
+      }
+
       return session;
     },
   },

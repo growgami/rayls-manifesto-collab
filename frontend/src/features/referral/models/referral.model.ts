@@ -2,15 +2,12 @@ import { Db, Collection, ObjectId, IndexSpecification } from 'mongodb';
 
 export interface IReferral {
   _id?: ObjectId;
-  email: string;
+  xId: string;
   referralCode: string;
   referredBy: string | null;
   referralCount: number;
   linkVisits: number;
   position: number;
-  maxTarget: number;
-  apiKey: string;
-  ipAddress: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,24 +30,22 @@ export class ReferralModel {
 
   private async createIndexes(): Promise<void> {
     const indexes: IndexSpecification[] = [
-      { email: 1 },
+      { xId: 1 },
       { referralCode: 1 },
       { apiKey: 1 },
       { referredBy: 1 },
       { position: 1 },
       { createdAt: -1 },
-      { email: 1, referralCode: 1 },
       { ipAddress: 1 }
     ];
 
     const indexOptions = [
-      { unique: true, name: 'email_unique' },
+      { unique: true, name: 'xId_unique' },
       { unique: true, name: 'referralCode_unique' },
       { unique: true, name: 'apiKey_unique' },
       { name: 'referredBy_index' },
       { name: 'position_index' },
       { name: 'createdAt_desc' },
-      { unique: true, name: 'email_referralCode_compound' },
       { name: 'ipAddress_index' }
     ];
 
@@ -79,8 +74,8 @@ export class ReferralModel {
     return await this.collection.findOne({ _id: new ObjectId(id) });
   }
 
-  async findByEmail(email: string): Promise<IReferral | null> {
-    return await this.collection.findOne({ email });
+  async findByXId(xId: string): Promise<IReferral | null> {
+    return await this.collection.findOne({ xId });
   }
 
   async findByReferralCode(referralCode: string): Promise<IReferral | null> {
@@ -107,10 +102,10 @@ export class ReferralModel {
     return await this.collection.find({ referredBy }).toArray();
   }
 
-  async incrementReferralCountByEmail(referrerEmail: string): Promise<IReferral | null> {
+  async incrementReferralCountByXId(xId: string): Promise<IReferral | null> {
     const result = await this.collection.findOneAndUpdate(
-      { email: referrerEmail },
-      { 
+      { xId },
+      {
         $inc: { referralCount: 1 },
         $set: { updatedAt: new Date() }
       },
@@ -119,20 +114,20 @@ export class ReferralModel {
     return result || null;
   }
 
-  async createWithReferrer(referralData: IReferralCreate, referrerEmail: string): Promise<{ newUser: IReferral; referrer: IReferral | null }> {
+  async createWithReferrer(referralData: IReferralCreate, referrerXId: string): Promise<{ newUser: IReferral; referrer: IReferral | null }> {
     const now = new Date();
     const document: Omit<IReferral, '_id'> = {
       ...referralData,
-      referredBy: referrerEmail,
+      referredBy: referrerXId,
       createdAt: now,
       updatedAt: now
     };
 
     const result = await this.collection.insertOne(document as IReferral);
     const newUser = { ...document, _id: result.insertedId };
-    
-    const referrer = await this.incrementReferralCountByEmail(referrerEmail);
-    
+
+    const referrer = await this.incrementReferralCountByXId(referrerXId);
+
     return { newUser, referrer };
   }
 
@@ -197,7 +192,8 @@ export class ReferralModel {
       return { referral: null, referredUsers: [], totalReferred: 0 };
     }
 
-    const referredUsers = await this.findByReferrer(referral.email);
+    // Find users who were referred by this referral's xId
+    const referredUsers = await this.findByReferrer(referral.referralCode);
     return {
       referral,
       referredUsers,

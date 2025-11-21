@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { getCollection, COLLECTIONS } from '@/features/tracking/lib/mongodb.lib';
+import { getCollection, COLLECTIONS } from '@/shared/lib/mongodb.lib';
 import type { UtmDataUpdateInput } from '@/features/tracking/modules/utm/models/utmData.model';
 
 export async function PATCH(

@@ -1,5 +1,5 @@
 import { ObjectId, Collection } from 'mongodb';
-import { getCollection, COLLECTIONS } from '@/features/tracking/lib/mongodb.lib';
+import { getCollection, COLLECTIONS } from '@/shared/lib/mongodb.lib';
 
 export interface UtmData {
   _id?: ObjectId;

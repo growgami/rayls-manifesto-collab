@@ -91,6 +91,24 @@ export default function AuthTestPage() {
             )}
 
             <div className="bg-white rounded-lg p-6 shadow-sm border">
+              <h3 className="text-lg font-medium mb-4">Database Information</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Database User ID</label>
+                  <p className="text-sm text-gray-900 font-mono">
+                    {user?.dbUserId ? user.dbUserId : "Not saved to database"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Persistence Status</label>
+                  <p className={`text-sm font-medium ${user?.dbUserId ? 'text-green-600' : 'text-red-600'}`}>
+                    {user?.dbUserId ? "✓ User data saved to MongoDB" : "✗ User data not persisted"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm border">
               <h3 className="text-lg font-medium mb-4">Raw Session Data</h3>
               <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
                 {JSON.stringify({ user, twitterData }, null, 2)}

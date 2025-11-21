@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MongoClient } from 'mongodb';
 import { ReferralModel } from '@/features/referral/models/referral.model';
-import { ReferralCodeGenerator, ReferralCookieManager, ReferralContext } from '@/features/referral/utils/referral.util';
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const DB_NAME = process.env.DB_NAME || 'usdai';
-
-async function connectToDatabase() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return client.db(DB_NAME);
-}
+import { ReferralCodeGenerator, ReferralCookieManager, ReferralContext } from '@/features/referral/services/referralGenerator.service';
+import { getDatabase } from '@/shared/lib/mongodb.lib';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    const db = await connectToDatabase();
+    const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
     const referrer = await referralModel.findByReferralCode(refCode);
@@ -41,7 +32,7 @@ export async function GET(request: NextRequest) {
     const referralContext: ReferralContext = {
       referralCode: refCode,
       timestamp: Date.now(),
-      referrerEmail: referrer.email
+      referrerXId: referrer.xId
     };
 
     const response = NextResponse.redirect(new URL('/', request.url));
