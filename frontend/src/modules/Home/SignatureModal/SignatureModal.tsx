@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
+import { Card } from "./SignatureCard/Card";
 import "./SignatureModal.css";
 
 interface SignatureModalProps {
@@ -10,6 +12,7 @@ interface SignatureModalProps {
 
 export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
+  const { isAuthenticated, isLoading, twitterData, signIn } = useAuth();
 
   if (!isOpen && !isClosing) return null;
 
@@ -21,6 +24,61 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
     }, 200);
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={`modal-overlay ${isClosing ? "closing" : ""}`} onClick={handleClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-body">
+            <div className="modal-text-section">
+              <p className="modal-description">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show Card if authenticated
+  if (isAuthenticated && twitterData) {
+    return (
+      <div className={`modal-overlay ${isClosing ? "closing" : ""}`} onClick={handleClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 className="modal-title">Your Signature</h2>
+            <button className="modal-close-btn" onClick={handleClose}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+          <Card
+            user={{
+              name: twitterData.name,
+              username: twitterData.username,
+              profileImageUrl: twitterData.profile_image_url,
+            }}
+            signatureNumber={62458}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in modal if not authenticated
   return (
     <div className={`modal-overlay ${isClosing ? "closing" : ""}`} onClick={handleClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -57,10 +115,7 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
             <div className="modal-actions">
               <button
                 className="modal-sign-btn"
-                onClick={() => {
-                  window.location.href =
-                    "https://twitter.com/i/oauth2/authorize?client_id=c1JLV2E5RVVTUWVYc244WGlrZ3Y6MTpjaQ&scope=users.read%20tweet.read%20offline.access&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fcallback%2Ftwitter&state=EQKrr15yw4qUmOB6TtJr3sSADMogvybEizGHilkvX_U&code_challenge=LjucxyV1br-I6yAvtUznteNL0uNtf_BCLUMWMYVubNk&code_challenge_method=S256";
-                }}
+                onClick={signIn}
               >
                 Sign in with X
               </button>

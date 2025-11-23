@@ -1,0 +1,105 @@
+.card-container {
+  padding: 24px;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.card-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.card-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.card-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.card-username {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.card-signature-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.card-badge-label {
+  font-size: 11px;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.card-badge-number {
+  font-size: 20px;
+  font-weight: 700;
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.card-divider {
+  height: 1px;
+  background: #ffffff26;
+  margin-bottom: 20px;
+}
+
+.card-quote-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card-quote {
+  font-size: 15px;
+  font-style: italic;
+  color: #e4e4e7;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.card-attribution {
+  font-size: 13px;
+  color: #a1a1aa;
+  font-weight: 500;
+  margin: 0;
+}
+
+.card-footer {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid #ffffff1a;
+}
+
+.card-footer-text {
+  font-size: 13px;
+  color: #a1a1aa;
+  line-height: 1.5;
+  margin: 0;
+}
