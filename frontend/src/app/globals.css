@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-background: hsl(240 10% 3.9%);
+  --color-foreground: hsl(0 0% 98%);
+  --color-white: #fff;
+  --color-black: #000;
+  --color-gray: #eff1f5;
+  --color-yellow: #ecfb3e;
+  --color-purple: #b49aff;
+  --color-green: #8cf78b;
 }
 
 @theme inline {
@@ -22,5 +28,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-rethink-sans), sans-serif;
+  scroll-behavior: smooth;
 }
