@@ -139,7 +139,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
   debug: process.env.NEXTAUTH_DEBUG === "true",
-  // Cookie configuration for PKCE - critical for localhost development
+  // Cookie configuration for PKCE
+  // NOTE: secure is disabled for IP-based development (no domain yet)
+  // TODO: When moving to production domain, enable secure cookies
   cookies: {
     pkceCodeVerifier: {
       name: "next-auth.pkce.code_verifier",
@@ -147,7 +149,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: false, // Disabled for IP-based auth (http://142.93.176.105)
       },
     },
     state: {
@@ -156,7 +158,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: false, // Disabled for IP-based auth (http://142.93.176.105)
       },
     },
   },
