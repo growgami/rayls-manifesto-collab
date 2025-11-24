@@ -1,9 +1,15 @@
+"use client";
+
 import Image from "next/image";
 
 import "./Home.css";
 import { SignatureStrip } from "./SignatureStrip";
+import { useTracking } from "@/features/tracking/hooks/useTracking.hook";
 
 export const Home = () => {
+  // Silent tracking - monitors user activity without displaying data
+  useTracking();
+
   return (
     <>
       <SignatureStrip />
@@ -188,9 +194,9 @@ export const Home = () => {
           we’ll ensure it flows through rails built for everyone.
         </p>
         <h2>The Time is Now</h2>
-        <p>Don't wait. The $100 trillion migration is already underway.</p>
+        <p>Don&apos;t wait. The $100 trillion migration is already underway.</p>
         <p>
-          The question isn't whether you'll participate—it's whether you'll be
+          The question isn&apos;t whether you&apos;ll participate—it&apos;s whether you&apos;ll be
           early or late.
         </p>
         <p className="font-bold text-white!">

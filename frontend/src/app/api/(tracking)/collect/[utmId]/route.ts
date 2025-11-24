@@ -9,16 +9,31 @@ async function handleSessionEnd(
 ) {
   // Handle both regular fetch and sendBeacon requests
   let body;
+
+  // Get content type to determine how to parse
+  const contentType = request.headers.get('content-type') || '';
+
   try {
-    body = await request.json();
-  } catch {
-    // Handle sendBeacon data (sent as blob)
+    // Try to read as text first
     const text = await request.text();
-    if (text) {
-      body = JSON.parse(text);
-    } else {
-      throw new Error('No request body received');
+
+    // If empty body, it might be a preflight or failed beacon
+    if (!text || text.trim() === '') {
+      // For sendBeacon, sometimes the body arrives empty - just log and return
+      console.warn('Empty body received for session end, utmId:', utmId);
+      return NextResponse.json(
+        { success: false, error: 'Empty request body' },
+        { status: 400 }
+      );
     }
+
+    body = JSON.parse(text);
+  } catch (err) {
+    console.error('Error parsing request body:', err);
+    return NextResponse.json(
+      { success: false, error: 'Invalid request body format' },
+      { status: 400 }
+    );
   }
 
   const {

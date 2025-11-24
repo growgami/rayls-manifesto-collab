@@ -128,28 +128,24 @@ export function useManifestoPageTimer(): UseManifestoPageTimerReturn {
     }, 1000);
 
     // Send final duration on page exit
-    const sendFinalDuration = async (finalActiveTime: number) => {
+    const sendFinalDuration = (finalActiveTime: number) => {
       if (!utmIdRef.current) return;
 
       const payload = {
         sessionEndTime: new Date().toISOString(),
         sessionDuration: finalActiveTime,
-        updatedAt: new Date().toISOString(),
       };
 
       try {
-        await fetch(`/api/collect/${utmIdRef.current}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-      } catch (err) {
-        console.error('Error sending final duration:', err);
-        // Fallback with sendBeacon
+        // Use sendBeacon with proper content type for reliability during page unload
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        navigator.sendBeacon(`/api/collect/${utmIdRef.current}`, blob);
+        const sent = navigator.sendBeacon(`/api/collect/${utmIdRef.current}`, blob);
+
+        if (!sent) {
+          console.warn('sendBeacon returned false - queue full or permission denied');
+        }
+      } catch (err) {
+        console.error('Error sending beacon:', err);
       }
     };
 

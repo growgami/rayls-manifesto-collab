@@ -14,7 +14,8 @@ interface CardProps {
 
 export const Card = ({ user, signatureNumber }: CardProps) => {
   return (
-    <div className="card-container">
+    <div className="card-canvas">
+      <div className="card-container">
       <div className="card-header">
         <div className="card-profile">
           <Image
@@ -49,6 +50,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
           Thank you for signing the manifesto and joining the movement.
         </p>
       </div>
+    </div>
     </div>
   );
 };

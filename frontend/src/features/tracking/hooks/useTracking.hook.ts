@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { DeviceDetectionService } from '../services/deviceDetection.service';
 
 interface UtmParams {
   utm_source?: string;
@@ -118,6 +119,16 @@ export function useTracking(options: UseTrackingOptions = {}): UseTrackingReturn
       try {
         const utmParams = extractUtmParams();
 
+        // Detect device type
+        const deviceInfo = DeviceDetectionService.detectFromBrowser();
+
+        // Capture referrer
+        const referrer = document.referrer || undefined;
+
+        // Extract referral code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralCode = urlParams.get('ref') || undefined;
+
         const response = await fetch('/api/collect', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -126,6 +137,9 @@ export function useTracking(options: UseTrackingOptions = {}): UseTrackingReturn
             ...utmParams,
             userAgent: navigator.userAgent,
             url: window.location.href,
+            referrer,
+            referralCode,
+            deviceType: deviceInfo.type,
             sessionStartTime: new Date().toISOString(),
           }),
         });

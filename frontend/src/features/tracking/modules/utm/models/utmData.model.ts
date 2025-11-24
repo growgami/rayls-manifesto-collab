@@ -15,6 +15,9 @@ export interface UtmData {
   // Additional tracking data
   userAgent?: string; // browser user agent string
   url: string; // full URL where UTM was captured
+  referrer?: string; // HTTP referrer (where user came from)
+  referralCode?: string; // internal referral code from ?ref= parameter
+  deviceType?: string; // device category (mobile, tablet, desktop, unknown)
 
   // Session timing data
   sessionStartTime: Date; // when session started
@@ -35,6 +38,9 @@ export interface UtmDataCreateInput {
   utm_content?: string;
   userAgent?: string;
   url: string;
+  referrer?: string;
+  referralCode?: string;
+  deviceType?: string;
   sessionStartTime: Date;
 }
 
@@ -93,6 +99,21 @@ export const utmDataSchemaValidation = {
         pattern: "^https?://.*",
         description: "must be a valid URL and is required"
       },
+      referrer: {
+        bsonType: "string",
+        maxLength: 2048,
+        description: "HTTP referrer URL (where user came from)"
+      },
+      referralCode: {
+        bsonType: "string",
+        maxLength: 50,
+        description: "internal referral code from ?ref= parameter for cross-reference analytics"
+      },
+      deviceType: {
+        bsonType: "string",
+        enum: ["mobile", "tablet", "desktop", "unknown"],
+        description: "device category detected from user agent"
+      },
       sessionStartTime: {
         bsonType: "date",
         description: "must be a date and is required"
@@ -139,7 +160,19 @@ export const utmDataIndexes = [
   { key: { createdAt: -1 }, options: { name: "createdAt_index" } },
 
   // Text search index for URL content analysis
-  { key: { url: "text" }, options: { name: "url_text_index" } }
+  { key: { url: "text" }, options: { name: "url_text_index" } },
+
+  // Index on deviceType for device analytics
+  { key: { deviceType: 1 }, options: { name: "deviceType_index" } },
+
+  // Compound index for device and source analysis
+  { key: { deviceType: 1, utm_source: 1 }, options: { name: "device_source_index" } },
+
+  // Index on referralCode for referral analytics
+  { key: { referralCode: 1 }, options: { name: "referralCode_index" } },
+
+  // Compound index for referral and campaign cross-analysis
+  { key: { referralCode: 1, utm_campaign: 1 }, options: { name: "referral_campaign_index" } }
 ];
 
 // Initialize UtmData collection with schema and indexes
@@ -162,8 +195,12 @@ export async function initializeUtmDataCollection(): Promise<Collection> {
     await collection.createIndex({ utm_source: 1, sessionDuration: -1 }, { name: "source_engagement_index" });
     await collection.createIndex({ createdAt: -1 }, { name: "createdAt_index" });
     await collection.createIndex({ url: "text" }, { name: "url_text_index" });
+    await collection.createIndex({ deviceType: 1 }, { name: "deviceType_index" });
+    await collection.createIndex({ deviceType: 1, utm_source: 1 }, { name: "device_source_index" });
+    await collection.createIndex({ referralCode: 1 }, { name: "referralCode_index" });
+    await collection.createIndex({ referralCode: 1, utm_campaign: 1 }, { name: "referral_campaign_index" });
 
-    console.log('UtmData collection initialized with schema validation and 7 indexes');
+    console.log('UtmData collection initialized with schema validation and 11 indexes');
   } catch (error) {
     console.error('Error initializing UtmData collection:', error);
   }
@@ -245,5 +282,124 @@ export class UtmDataModel {
     ]).toArray() as { totalSessions: number; avgDuration: number; bounceRate: number }[];
 
     return stats[0] || { totalSessions: 0, avgDuration: 0, bounceRate: 0 };
+  }
+
+  static async getDeviceBreakdown(): Promise<{ device: string; count: number; percentage: number }[]> {
+    const collection = await getCollection(COLLECTIONS.UTM_DATA);
+
+    const total = await collection.countDocuments();
+
+    const breakdown = await collection.aggregate([
+      { $match: { deviceType: { $exists: true, $ne: null } } },
+      { $group: { _id: "$deviceType", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      {
+        $project: {
+          _id: 0,
+          device: "$_id",
+          count: 1,
+          percentage: { $round: [{ $multiply: [{ $divide: ["$count", total] }, 100] }, 2] }
+        }
+      }
+    ]).toArray() as { device: string; count: number; percentage: number }[];
+
+    return breakdown;
+  }
+
+  static async getTopReferrers(limit: number = 10): Promise<{ referrer: string; count: number }[]> {
+    const collection = await getCollection(COLLECTIONS.UTM_DATA);
+
+    return await collection.aggregate([
+      { $match: { referrer: { $exists: true, $nin: [null, ""] } } },
+      { $group: { _id: "$referrer", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: limit },
+      { $project: { _id: 0, referrer: "$_id", count: 1 } }
+    ]).toArray() as { referrer: string; count: number }[];
+  }
+
+  static async getDeviceEngagement(): Promise<{ device: string; avgDuration: number; sessions: number }[]> {
+    const collection = await getCollection(COLLECTIONS.UTM_DATA);
+
+    return await collection.aggregate([
+      { $match: { deviceType: { $exists: true, $ne: null } } },
+      {
+        $group: {
+          _id: "$deviceType",
+          avgDuration: { $avg: "$sessionDuration" },
+          sessions: { $sum: 1 }
+        }
+      },
+      { $sort: { sessions: -1 } },
+      {
+        $project: {
+          _id: 0,
+          device: "$_id",
+          avgDuration: { $round: ["$avgDuration", 2] },
+          sessions: 1
+        }
+      }
+    ]).toArray() as { device: string; avgDuration: number; sessions: number }[];
+  }
+
+  static async getReferralCodePerformance(): Promise<{ referralCode: string; sessions: number; avgDuration: number; devices: { mobile: number; desktop: number; tablet: number } }[]> {
+    const collection = await getCollection(COLLECTIONS.UTM_DATA);
+
+    return await collection.aggregate([
+      { $match: { referralCode: { $exists: true, $nin: [null, ""] } } },
+      {
+        $group: {
+          _id: "$referralCode",
+          sessions: { $sum: 1 },
+          avgDuration: { $avg: "$sessionDuration" },
+          mobileCount: {
+            $sum: { $cond: [{ $eq: ["$deviceType", "mobile"] }, 1, 0] }
+          },
+          desktopCount: {
+            $sum: { $cond: [{ $eq: ["$deviceType", "desktop"] }, 1, 0] }
+          },
+          tabletCount: {
+            $sum: { $cond: [{ $eq: ["$deviceType", "tablet"] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { sessions: -1 } },
+      {
+        $project: {
+          _id: 0,
+          referralCode: "$_id",
+          sessions: 1,
+          avgDuration: { $round: ["$avgDuration", 2] },
+          devices: {
+            mobile: "$mobileCount",
+            desktop: "$desktopCount",
+            tablet: "$tabletCount"
+          }
+        }
+      }
+    ]).toArray() as { referralCode: string; sessions: number; avgDuration: number; devices: { mobile: number; desktop: number; tablet: number } }[];
+  }
+
+  static async getReferralCampaignCrossAnalysis(): Promise<{ referralCode: string; campaign: string; sessions: number }[]> {
+    const collection = await getCollection(COLLECTIONS.UTM_DATA);
+
+    return await collection.aggregate([
+      { $match: { referralCode: { $exists: true, $nin: [null, ""] }, utm_campaign: { $exists: true, $nin: [null, ""] } } },
+      {
+        $group: {
+          _id: { referralCode: "$referralCode", campaign: "$utm_campaign" },
+          sessions: { $sum: 1 }
+        }
+      },
+      { $sort: { sessions: -1 } },
+      {
+        $project: {
+          _id: 0,
+          referralCode: "$_id.referralCode",
+          campaign: "$_id.campaign",
+          sessions: 1
+        }
+      }
+    ]).toArray() as { referralCode: string; campaign: string; sessions: number }[];
   }
 }

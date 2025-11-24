@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
       utm_term,
       utm_content,
       userAgent,
-      url
+      url,
+      referrer,
+      referralCode,
+      deviceType
     }: UtmDataCreateInput = body;
 
     // Validate required fields
@@ -36,6 +39,9 @@ export async function POST(request: NextRequest) {
       utm_content,
       userAgent,
       url,
+      referrer,
+      referralCode,
+      deviceType,
       sessionStartTime: new Date(),
       sessionEndTime: null,
       sessionDuration: null,
