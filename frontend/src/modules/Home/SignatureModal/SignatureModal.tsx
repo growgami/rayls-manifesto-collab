@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
+import { useUserPosition } from "@/features/signing/modules/signature/hooks/useUserPosition.hook";
 import { Card } from "./SignatureCard/Card";
 import "./SignatureModal.css";
 
@@ -13,6 +14,7 @@ interface SignatureModalProps {
 export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const { isAuthenticated, isLoading, twitterData, signIn } = useAuth();
+  const { data: userPosition, isLoading: positionLoading } = useUserPosition();
 
   if (!isOpen && !isClosing) return null;
 
@@ -65,14 +67,22 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
               <span className="sr-only">Close</span>
             </button>
           </div>
-          <Card
-            user={{
-              name: twitterData.name,
-              username: twitterData.username,
-              profileImageUrl: twitterData.profile_image_url,
-            }}
-            signatureNumber={62458}
-          />
+          {positionLoading ? (
+            <div className="modal-body">
+              <div className="modal-text-section">
+                <p className="modal-description">Loading your signature...</p>
+              </div>
+            </div>
+          ) : (
+            <Card
+              user={{
+                name: twitterData.name,
+                username: twitterData.username,
+                profileImageUrl: twitterData.profile_image_url,
+              }}
+              signatureNumber={userPosition || 0}
+            />
+          )}
         </div>
       </div>
     );

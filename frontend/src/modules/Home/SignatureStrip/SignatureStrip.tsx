@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
+import { useSignatureCount } from "@/features/signing/modules/signature/hooks/useSignatureCount.hook";
 import "./SignatureStrip.css";
 import { SignatureModal } from "../SignatureModal";
 
 export const SignatureStrip = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { data: signatureCount, isLoading: countLoading } = useSignatureCount();
 
   // Auto-open modal if user just authenticated
   useEffect(() => {
@@ -21,7 +23,9 @@ export const SignatureStrip = () => {
       <div className="signature-strip">
         <div className="signature-row">
           <p className="sig-title">SIGNATURES</p>
-          <p className="sig-count">62,458</p>
+          <p className="sig-count">
+            {countLoading ? '...' : (signatureCount?.toLocaleString() || '0')}
+          </p>
         </div>
         <button className="sig-btn" onClick={() => setIsModalOpen(true)}>
           {isAuthenticated ? "View My Signature" : "Sign in with X"}

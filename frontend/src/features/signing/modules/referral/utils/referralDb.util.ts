@@ -1,5 +1,6 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { ReferralModel, IReferralCreate } from '@/features/signing/modules/referral/models/referral.model';
+import { PositionCounterService } from '@/features/signing/modules/referral/utils/positionCounter.util';
 
 export class ReferralDbService {
   static async createReferralRecord(userData: {
@@ -9,9 +10,8 @@ export class ReferralDbService {
     const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
-    // Calculate position based on total referrals
-    const referralsCollection = db.collection('referrals');
-    const totalReferrals = await referralsCollection.countDocuments();
+    // Get next position atomically (fixes race condition)
+    const position = await PositionCounterService.getNextPosition();
 
     const referralData: IReferralCreate = {
       xId: userData.xId,
@@ -19,7 +19,7 @@ export class ReferralDbService {
       referredBy: null,
       referralCount: 0,
       linkVisits: 0,
-      position: totalReferrals + 1
+      position: position
     };
 
     await referralModel.create(referralData);
