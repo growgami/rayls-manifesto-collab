@@ -10,12 +10,21 @@
 
 /* Content container within the canvas */
 .card-container {
+  /* CSS Custom Properties for dynamic milestone styling */
+  --badge-gradient: linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%);
+  --card-bg-color: #ffffff;
+  --quote-color: #27272a;
+  --attribution-color: #71717a;
+  --footer-color: #71717a;
+  --divider-color: #e4e4e7;
+
   width: 100%;
   height: 100%;
   padding: 30px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  background: var(--card-bg-color);
 }
 
 .card-header {
@@ -76,14 +85,14 @@
   font-size: 20px;
   font-weight: 700;
   -webkit-text-fill-color: transparent;
-  background: linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%);
+  background: var(--badge-gradient);
   -webkit-background-clip: text;
   background-clip: text;
 }
 
 .card-divider {
   height: 1px;
-  background: #e4e4e7;
+  background: var(--divider-color);
   margin-bottom: 20px;
 }
 
@@ -95,14 +104,14 @@
 .card-quote {
   font-size: 15px;
   font-style: italic;
-  color: #27272a;
+  color: var(--quote-color);
   line-height: 1.6;
   margin: 0 0 12px 0;
 }
 
 .card-attribution {
   font-size: 13px;
-  color: #71717a;
+  color: var(--attribution-color);
   font-weight: 500;
   margin: 0;
 }
@@ -110,12 +119,12 @@
 .card-footer {
   text-align: center;
   padding-top: 16px;
-  border-top: 1px solid #e4e4e7;
+  border-top: 1px solid var(--divider-color);
 }
 
 .card-footer-text {
   font-size: 13px;
-  color: #71717a;
+  color: var(--footer-color);
   line-height: 1.5;
   margin: 0;
 }

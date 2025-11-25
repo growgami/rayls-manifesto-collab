@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { downloadSignatureCard } from "./util/download.util";
+import { MilestoneConfig } from "./config/milestone.config";
 import "./Card.css";
 
 interface CardProps {
@@ -17,6 +18,26 @@ interface CardProps {
 export const Card = ({ user, signatureNumber }: CardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Get milestone configuration for this signature number
+  const { milestone } = useMemo(
+    () => MilestoneConfig.getMilestoneForSignature(signatureNumber),
+    [signatureNumber]
+  );
+
+  // Generate CSS custom properties for dynamic styling
+  const cardStyles = useMemo(() => {
+    const { badgeGradient, cardStyling = {} } = milestone;
+
+    return {
+      "--badge-gradient": MilestoneConfig.getBadgeGradientCSS(milestone),
+      "--card-bg-color": cardStyling.backgroundColor,
+      "--quote-color": cardStyling.quoteColor,
+      "--attribution-color": cardStyling.attributionColor,
+      "--footer-color": cardStyling.footerColor,
+      "--divider-color": cardStyling.dividerColor,
+    } as React.CSSProperties;
+  }, [milestone]);
 
   const handleDownload = async () => {
     if (!cardRef.current || isDownloading) return;
@@ -38,7 +59,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
   return (
     <div className="card-canvas">
-      <div className="card-container" ref={cardRef}>
+      <div className="card-container" ref={cardRef} style={cardStyles}>
       <div className="card-header">
         <div className="card-profile">
           <Image
@@ -63,14 +84,14 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
       <div className="card-quote-section">
         <p className="card-quote">
-          &ldquo;The rails are laid. The destination is clear. All aboard the future of finance.&rdquo;
+          &ldquo;{milestone.content.quote}&rdquo;
         </p>
-        <p className="card-attribution"> The Rayls Manifesto</p>
+        <p className="card-attribution">{milestone.content.attribution}</p>
       </div>
 
       <div className="card-footer">
         <p className="card-footer-text">
-          Thank you for signing the manifesto and joining the movement.
+          {milestone.content.footerText}
         </p>
       </div>
     </div>
@@ -86,8 +107,8 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
       <button
         onClick={() => {
-          const tweetText = `I just signed the Rayls Manifesto as signature #${signatureNumber.toLocaleString()}! 🚂\n\n"The rails are laid. The destination is clear. All aboard the future of finance."\n\n`;
-          const tweetUrl = 'https://rayls.io'; // Replace with your actual URL
+          const tweetText = `I just signed the Rayls Manifesto as signature #${signatureNumber.toLocaleString()}! 🚂\n\n"${milestone.content.quote}"\n\n`;
+          const tweetUrl = 'https://rayls.io';
           const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
           window.open(twitterIntentUrl, '_blank', 'width=550,height=420');
         }}
