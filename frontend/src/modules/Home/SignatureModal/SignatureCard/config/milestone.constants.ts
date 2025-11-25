@@ -7,16 +7,17 @@ import { IMilestone } from "@/modules/Home/SignatureModal/SignatureCard/types/mi
  * Ranges must not overlap and should be in ascending order for optimal lookup.
  */
 export const MILESTONES: IMilestone[] = [
-  // KOL/Founding Signatures (1-75)
+  // Milestone 1: Founding Members (1-300, includes KOLs 1-75)
+  // Gap: 301-500 reserved, never assigned
   {
     min: 1,
-    max: 75,
+    max: 300,
     content: {
       quote:
         "First to believe, first to act. The foundation of every movement is built by those who dare to lead.",
       attribution: "- Founding Signature",
       footerText:
-        "You are among the elite founding signatures. Thank you for being a Key Opinion Leader in this revolution.",
+        "You are among the first 300 signatures. Thank you for being a founding member of this revolution.",
     },
     badgeGradient: {
       startColor: "#ffd700",
@@ -28,16 +29,17 @@ export const MILESTONES: IMilestone[] = [
     },
   },
 
-  // First Regular Milestone (76-1000)
+  // Milestone 2: Early Pioneers (501-4800)
+  // Gap: 4801-5000 reserved, never assigned
   {
-    min: 76,
-    max: 1000,
+    min: 501,
+    max: 4800,
     content: {
       quote:
         "The rails are laid. The destination is clear. All aboard the future of finance.",
-      attribution: "- The Rayls Manifesto",
+      attribution: "- Early Pioneer",
       footerText:
-        "Thank you for signing the manifesto and joining the movement.",
+        "You're among the first 5,000 to join this movement. Thank you for your early belief.",
     },
     badgeGradient: {
       startColor: "#b49aff",
@@ -46,16 +48,17 @@ export const MILESTONES: IMilestone[] = [
     },
   },
 
-  // Early Pioneer Milestone (1001-2000)
+  // Milestone 3: Momentum Builders (5001-19800)
+  // Gap: 19801-20000 reserved, never assigned
   {
-    min: 1001,
-    max: 2000,
+    min: 5001,
+    max: 19800,
     content: {
       quote:
-        "Early believers become tomorrow's pioneers. The tracks ahead shine with possibility.",
-      attribution: "- Pioneer Signature",
+        "Momentum builds as more join the journey. Together, we accelerate toward the future.",
+      attribution: "- Momentum Builder",
       footerText:
-        "You're among the first 2,000 to join this revolution. Thank you for your early support.",
+        "You're part of the growing wave that will reshape finance. Welcome aboard.",
     },
     badgeGradient: {
       startColor: "#ff6b6b",
@@ -67,16 +70,17 @@ export const MILESTONES: IMilestone[] = [
     },
   },
 
-  // Momentum Builder Milestone (2001-5000)
+  // Milestone 4: Network Amplifiers (20001-49800)
+  // Gap: 49801-50000 reserved, never assigned
   {
-    min: 2001,
-    max: 5000,
+    min: 20001,
+    max: 49800,
     content: {
       quote:
-        "Momentum builds as more join the journey. Together, we accelerate toward the future.",
-      attribution: "- Momentum Builder",
+        "The network effect is real. Every signature strengthens our collective voice.",
+      attribution: "- Network Amplifier",
       footerText:
-        "You're part of the growing wave that will reshape finance. Welcome aboard.",
+        "You're amplifying the signal. Thank you for standing with tens of thousands.",
     },
     badgeGradient: {
       startColor: "#4ecdc4",
@@ -85,16 +89,17 @@ export const MILESTONES: IMilestone[] = [
     },
   },
 
-  // Network Amplifier Milestone (5001-10000)
+  // Milestone 5: Movement Leaders (50001+)
+  // No upper limit
   {
-    min: 5001,
-    max: 10000,
+    min: 50001,
+    max: Infinity,
     content: {
       quote:
-        "The network effect is real. Every signature strengthens our collective voice.",
-      attribution: "- Network Amplifier",
+        "We are the movement. Together, we chart the course for the future of finance.",
+      attribution: "- Movement Leader",
       footerText:
-        "You're amplifying the signal. Thank you for standing with thousands.",
+        "You are part of a global movement. Thank you for joining the revolution.",
     },
     badgeGradient: {
       startColor: "#a770ef",

@@ -7,6 +7,30 @@ export class PositionCounterService {
   private static readonly KOL_MAX_POSITION = 75;
   private static readonly REGULAR_START_POSITION = 76;
 
+  // Milestone boundaries with gaps (200 reserved positions between milestones)
+  private static readonly MILESTONE_BOUNDARIES = [
+    { max: 300, nextStart: 501 },      // Milestone 1 ends at 300, skip 301-500
+    { max: 4800, nextStart: 5001 },    // Milestone 2 ends at 4800, skip 4801-5000
+    { max: 19800, nextStart: 20001 },  // Milestone 3 ends at 19800, skip 19801-20000
+    { max: 49800, nextStart: 50001 },  // Milestone 4 ends at 49800, skip 49801-50000
+    // Milestone 5 has no upper limit
+  ];
+
+  /**
+   * Checks if position is at a milestone boundary and returns next valid position
+   * @param position The current position to check
+   * @returns The next valid position (same if not at boundary, or skipped to next milestone)
+   */
+  private static getNextValidPosition(position: number): number {
+    for (const boundary of this.MILESTONE_BOUNDARIES) {
+      if (position === boundary.max) {
+        console.log(`Position ${position} hit milestone boundary. Skipping to ${boundary.nextStart}`);
+        return boundary.nextStart;
+      }
+    }
+    return position;
+  }
+
   /**
    * Gets the next KOL position atomically (positions 1-75)
    * Auto-initializes counter if it doesn't exist
@@ -32,6 +56,7 @@ export class PositionCounterService {
   /**
    * Gets the next regular user position atomically (positions 76+)
    * Auto-initializes counter starting at 76 if it doesn't exist
+   * Automatically skips reserved gaps between milestones
    * @returns The next regular user position number
    */
   static async getNextRegularPosition(): Promise<number> {
@@ -48,7 +73,19 @@ export class PositionCounterService {
     }
 
     // Get next position atomically
-    return await counterModel.getNextSequence(this.REGULAR_COUNTER_ID);
+    let nextPosition = await counterModel.getNextSequence(this.REGULAR_COUNTER_ID);
+
+    // Check if we hit a milestone boundary and need to skip
+    const validPosition = this.getNextValidPosition(nextPosition);
+
+    if (validPosition !== nextPosition) {
+      // We hit a boundary, update counter to the new milestone start - 1
+      // (because next call will increment it)
+      await counterModel.initializeCounter(this.REGULAR_COUNTER_ID, validPosition - 1);
+      nextPosition = validPosition;
+    }
+
+    return nextPosition;
   }
 
   /**
@@ -113,7 +150,31 @@ export class PositionCounterService {
   }
 
   /**
-   * Gets the total number of signatures (sum of both counters)
+   * Calculates actual signature count excluding reserved gaps
+   * @param highestPosition The highest position number assigned
+   * @returns Number of actual signatures (excluding gaps)
+   */
+  private static calculateActualCount(highestPosition: number): number {
+    let count = 0;
+    let gapsSkipped = 0;
+
+    // Count gaps that have been passed
+    for (const boundary of this.MILESTONE_BOUNDARIES) {
+      if (highestPosition > boundary.max) {
+        // We've passed this boundary, subtract the gap
+        const gapSize = boundary.nextStart - boundary.max - 1;
+        gapsSkipped += gapSize;
+      }
+    }
+
+    // Actual count = highest position - gaps skipped
+    count = highestPosition - gapsSkipped;
+
+    return count;
+  }
+
+  /**
+   * Gets the total number of signatures (excluding reserved gaps)
    * @returns The total signature count
    */
   static async getTotalSignatures(): Promise<number> {
@@ -129,10 +190,10 @@ export class PositionCounterService {
       return await referralsCollection.countDocuments();
     }
 
-    // Return sum of both counters (handle null cases)
-    const kolCount = kolValue || 0;
-    const regularCount = regularValue ? regularValue - this.REGULAR_START_POSITION + 1 : 0;
+    // Get the highest position assigned
+    const highestPosition = regularValue || kolValue || 0;
 
-    return kolCount + regularCount;
+    // Calculate actual count excluding gaps
+    return this.calculateActualCount(highestPosition);
   }
 }
