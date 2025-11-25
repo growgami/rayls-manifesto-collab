@@ -150,50 +150,15 @@ export class PositionCounterService {
   }
 
   /**
-   * Calculates actual signature count excluding reserved gaps
-   * @param highestPosition The highest position number assigned
-   * @returns Number of actual signatures (excluding gaps)
-   */
-  private static calculateActualCount(highestPosition: number): number {
-    let count = 0;
-    let gapsSkipped = 0;
-
-    // Count gaps that have been passed
-    for (const boundary of this.MILESTONE_BOUNDARIES) {
-      if (highestPosition > boundary.max) {
-        // We've passed this boundary, subtract the gap
-        const gapSize = boundary.nextStart - boundary.max - 1;
-        gapsSkipped += gapSize;
-      }
-    }
-
-    // Actual count = highest position - gaps skipped
-    count = highestPosition - gapsSkipped;
-
-    return count;
-  }
-
-  /**
-   * Gets the total number of signatures (excluding reserved gaps)
-   * @returns The total signature count
+   * Gets the total number of signatures
+   * @returns The total signature count (actual number of users who signed)
    */
   static async getTotalSignatures(): Promise<number> {
     const db = await getDatabase();
-    const counterModel = new CounterModel(db);
+    const referralsCollection = db.collection('referrals');
 
-    const kolValue = await counterModel.getCurrentValue(this.KOL_COUNTER_ID);
-    const regularValue = await counterModel.getCurrentValue(this.REGULAR_COUNTER_ID);
-
-    // If counters don't exist yet, fall back to counting documents
-    if (kolValue === null && regularValue === null) {
-      const referralsCollection = db.collection('referrals');
-      return await referralsCollection.countDocuments();
-    }
-
-    // Get the highest position assigned
-    const highestPosition = regularValue || kolValue || 0;
-
-    // Calculate actual count excluding gaps
-    return this.calculateActualCount(highestPosition);
+    // Simply count the documents in the referrals collection
+    // This gives us the actual number of users who have signed
+    return await referralsCollection.countDocuments();
   }
 }
