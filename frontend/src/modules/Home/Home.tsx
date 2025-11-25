@@ -21,7 +21,7 @@ export const Home = () => {
           backgroundImage: 'url("/images/background.png")',
         }}
       >
-        <main className="manifesto-article">
+        <main className="manifesto-article manifesto-article-top">
           <header className="manifesto-header">
             <Image
               src="/images/Rayls_Logo_Gradient.png"
@@ -196,8 +196,8 @@ export const Home = () => {
         <h2>The Time is Now</h2>
         <p>Don&apos;t wait. The $100 trillion migration is already underway.</p>
         <p>
-          The question isn&apos;t whether you&apos;ll participate—it&apos;s whether you&apos;ll be
-          early or late.
+          The question isn&apos;t whether you&apos;ll participate—it&apos;s
+          whether you&apos;ll be early or late.
         </p>
         <p className="font-bold text-white!">
           Be part of the future. Take control of your financial freedom today.

@@ -14,7 +14,7 @@
   padding: 0 16px;
   pointer-events: none;
   margin-bottom: 32px;
-  margin-top: 80px;
+  margin-top: 150px;
 }
 
 @media (min-width: 640px) {
@@ -41,6 +41,12 @@
   line-height: 1.7;
   padding-inline: 20px;
   text-align: center;
+}
+
+.manifesto-article-top p {
+  color: #fff !important;
+  text-shadow: 1px 1px 6px #000 !important;
+  font-weight: 500;
 }
 
 .manifesto-article h1 {
@@ -129,5 +135,17 @@
 @media (min-width: 640px) {
   .manifesto-article h1 {
     font-size: 3rem;
+  }
+}
+@media (max-width: 660px) {
+  .manifesto-article h1 {
+    font-size: 2.2rem;
+
+    width: 100%;
+  }
+}
+@media (max-width: 300px) {
+  .manifesto-article h1 {
+    font-size: 1.5rem;
   }
 }
