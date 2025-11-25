@@ -21,9 +21,6 @@ const rethinkSans = Rethink_Sans({
 export const metadata: Metadata = {
   title: "Rayls Manifesto",
   description: "",
-  icons: {
-    icon: "/favicon.svg",
-  },
 };
 
 export default function RootLayout({
