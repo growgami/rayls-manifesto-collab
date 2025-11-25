@@ -8,6 +8,7 @@ export interface IReferral {
   referralCount: number;
   linkVisits: number;
   position: number;
+  isKOL: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +37,8 @@ export class ReferralModel {
       { referredBy: 1 },
       { position: 1 },
       { createdAt: -1 },
-      { ipAddress: 1 }
+      { ipAddress: 1 },
+      { isKOL: 1 }
     ];
 
     const indexOptions = [
@@ -46,7 +48,8 @@ export class ReferralModel {
       { name: 'referredBy_index' },
       { name: 'position_index' },
       { name: 'createdAt_desc' },
-      { name: 'ipAddress_index' }
+      { name: 'ipAddress_index' },
+      { name: 'isKOL_index' }
     ];
 
     try {

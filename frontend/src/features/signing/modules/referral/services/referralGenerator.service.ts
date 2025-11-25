@@ -107,7 +107,8 @@ export class ReferralCodeGenerator {
     // Create referral database record
     await ReferralDbService.createReferralRecord({
       xId: userData.xId,
-      referralCode: referralCode
+      referralCode: referralCode,
+      username: userData.username
     });
 
     return referralCode;
