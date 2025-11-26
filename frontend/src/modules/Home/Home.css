@@ -1,4 +1,5 @@
 .mainContainer {
+  background-image: url("/images/background.png");
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-size: cover;
@@ -142,6 +143,12 @@
     font-size: 2.2rem;
 
     width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .mainContainer {
+    background-image: url("/images/for-mobile.png");
+    background-position: center top;
   }
 }
 @media (max-width: 300px) {
