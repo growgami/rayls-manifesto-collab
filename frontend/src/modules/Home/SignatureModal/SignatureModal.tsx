@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
 import { useUserPosition } from "@/features/signing/modules/signature/hooks/useUserPosition.hook";
+import { useUserReferral } from "@/features/signing/modules/referral/hooks/useUserReferral.hook";
 import { Card } from "./SignatureCard/Card";
+import { Referral } from "./ReferralCodes/Referral";
 import "./SignatureModal.css";
 
 interface SignatureModalProps {
@@ -15,6 +17,7 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const { isAuthenticated, isLoading, twitterData, signIn } = useAuth();
   const { data: userPosition, isLoading: positionLoading } = useUserPosition();
+  const { referralCode } = useUserReferral();
 
   if (!isOpen && !isClosing) return null;
 
@@ -74,14 +77,19 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
               </div>
             </div>
           ) : (
-            <Card
-              user={{
-                name: twitterData.name,
-                username: twitterData.username,
-                profileImageUrl: twitterData.profile_image_url,
-              }}
-              signatureNumber={userPosition || 0}
-            />
+            <div className="modal-body">
+              <div className="signature-content-wrapper">
+                <Card
+                  user={{
+                    name: twitterData.name,
+                    username: twitterData.username,
+                    profileImageUrl: twitterData.profile_image_url,
+                  }}
+                  signatureNumber={userPosition || 0}
+                />
+                {referralCode && <Referral referralCode={referralCode} />}
+              </div>
+            </div>
           )}
         </div>
       </div>

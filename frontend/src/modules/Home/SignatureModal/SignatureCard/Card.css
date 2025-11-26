@@ -1,17 +1,19 @@
-/* Fixed 850x450px canvas - scales proportionally on smaller screens */
+/* Fixed 850x450px canvas */
 .card-canvas {
   width: 850px;
   height: 450px;
-  max-width: 100%;
   aspect-ratio: 17 / 9;
   background: white;
   position: relative;
+  margin: 0 auto;
 }
+
 
 /* Content container within the canvas */
 .card-container {
   /* CSS Custom Properties for dynamic milestone styling */
   --badge-gradient: linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%);
+  --card-bg-image: none;
   --card-bg-color: #ffffff;
   --quote-color: #27272a;
   --attribution-color: #71717a;
@@ -24,7 +26,12 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: var(--card-bg-color);
+  background-image: var(--card-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--card-bg-color);
+  position: relative;
 }
 
 .card-header {
@@ -33,61 +40,62 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 20px;
+  margin-top: -20px;
 }
 
 .card-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 60px;
   flex: 1;
+  margin-left: 30px;
 }
 
 .card-avatar {
-  border-radius: 50%;
+  border-radius: 20%;
   object-fit: cover;
+  width: 80px !important;
+  height: 80px !important;
+  scale:1.5;
 }
 
 .card-user-info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .card-name {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 600;
-  color: #18181b;
+  color: #fbce6d;
   margin: 0;
+  line-height: 1;
 }
 
 .card-username {
-  font-size: 14px;
-  color: #71717a;
+  font-size: 16px;
+  color: #fbce6d;
   margin: 0;
+  line-height: 1;
 }
 
 .card-signature-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-105%);
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.card-badge-label {
-  font-size: 11px;
-  color: #71717a;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .card-badge-number {
-  font-size: 20px;
+  font-size: 32px;
   font-weight: 700;
-  -webkit-text-fill-color: transparent;
-  background: var(--badge-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: #fbce6d;
+  text-align: left;
 }
 
 .card-divider {

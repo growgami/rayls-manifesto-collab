@@ -33,22 +33,18 @@ export class ReferralModel {
     const indexes: IndexSpecification[] = [
       { xId: 1 },
       { referralCode: 1 },
-      { apiKey: 1 },
       { referredBy: 1 },
       { position: 1 },
       { createdAt: -1 },
-      { ipAddress: 1 },
       { isKOL: 1 }
     ];
 
     const indexOptions = [
       { unique: true, name: 'xId_unique' },
       { unique: true, name: 'referralCode_unique' },
-      { unique: true, name: 'apiKey_unique' },
       { name: 'referredBy_index' },
       { name: 'position_index' },
       { name: 'createdAt_desc' },
-      { name: 'ipAddress_index' },
       { name: 'isKOL_index' }
     ];
 
@@ -83,22 +79,6 @@ export class ReferralModel {
 
   async findByReferralCode(referralCode: string): Promise<IReferral | null> {
     return await this.collection.findOne({ referralCode });
-  }
-
-  async findByApiKey(apiKey: string): Promise<IReferral | null> {
-    return await this.collection.findOne({ apiKey });
-  }
-
-  async findByIpAddress(ipAddress: string): Promise<IReferral | null> {
-    return await this.collection.findOne({ ipAddress });
-  }
-
-  async countByIpAddressInTimeRange(ipAddress: string, hoursBack: number = 1): Promise<number> {
-    const timeThreshold = new Date(Date.now() - (hoursBack * 60 * 60 * 1000));
-    return await this.collection.countDocuments({ 
-      ipAddress,
-      createdAt: { $gte: timeThreshold }
-    });
   }
 
   async findByReferrer(referredBy: string): Promise<IReferral[]> {

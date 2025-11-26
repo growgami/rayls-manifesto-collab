@@ -3,6 +3,15 @@ import TwitterProvider from "next-auth/providers/twitter";
 import { TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
 import { AuthUserService } from "@/features/signing/services/signing.service";
 
+/**
+ * Upgrades Twitter profile image URL from low-res to original high-res
+ * Removes _normal suffix to get the original resolution image
+ */
+const upgradeTwitterImageUrl = (url: string): string => {
+  if (!url) return url;
+  return url.replace(/_normal\.(jpg|jpeg|png|gif|webp)$/i, '.$1');
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     TwitterProvider({
@@ -18,12 +27,14 @@ export const authOptions: NextAuthOptions = {
       profile(profile) {
         console.log(`[TWITTER-PROFILE] Processing profile for user: @${profile.data?.username}`);
         const userData = profile.data;
+        const highResImageUrl = upgradeTwitterImageUrl(userData.profile_image_url || "");
+
         const twitterData: TwitterUserData = {
           created_at: userData.created_at || "",
           description: userData.description || "",
           id: userData.id,
           name: userData.name,
-          profile_image_url: userData.profile_image_url || "",
+          profile_image_url: highResImageUrl,
           url: userData.url || "",
           username: userData.username,
         };
@@ -32,7 +43,7 @@ export const authOptions: NextAuthOptions = {
           id: userData.id,
           name: userData.name,
           email: undefined,
-          image: userData.profile_image_url,
+          image: highResImageUrl,
           twitterData,
         };
       },

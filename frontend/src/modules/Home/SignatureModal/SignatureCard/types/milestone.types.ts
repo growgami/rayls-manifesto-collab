@@ -39,57 +39,26 @@ export interface IBadgeGradient {
  */
 export interface ICardStyling {
   /**
+   * Background image URL for the card container
+   * Path relative to /public directory
+   * Example: "/images/cards/legendary-card.webp"
+   */
+  backgroundImage?: string;
+
+  /**
    * Background color of the card container
    * Default: white (#ffffff)
+   * Note: backgroundImage takes precedence if both are defined
    */
   backgroundColor?: HexColor;
-
-  /**
-   * Quote text color
-   * Default: #27272a (zinc-800)
-   */
-  quoteColor?: HexColor;
-
-  /**
-   * Attribution text color
-   * Default: #71717a (zinc-500)
-   */
-  attributionColor?: HexColor;
-
-  /**
-   * Footer text color
-   * Default: #71717a (zinc-500)
-   */
-  footerColor?: HexColor;
-
-  /**
-   * Divider line color
-   * Default: #e4e4e7 (zinc-200)
-   */
-  dividerColor?: HexColor;
 }
 
 /**
  * Text content for a milestone
+ * Currently empty as all text content has been removed from cards
  */
 export interface IMilestoneContent {
-  /**
-   * The main quote text displayed on the card
-   * Should be inspirational and relevant to the milestone
-   */
-  quote: string;
-
-  /**
-   * Attribution line below the quote
-   * Example: "- The Rayls Manifesto" or "- Early Adopter"
-   */
-  attribution: string;
-
-  /**
-   * Footer message thanking the user
-   * Should acknowledge their position in the milestone
-   */
-  footerText: string;
+  // Placeholder - can be removed if no content is needed in the future
 }
 
 /**

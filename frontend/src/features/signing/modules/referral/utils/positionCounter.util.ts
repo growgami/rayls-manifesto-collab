@@ -1,20 +1,16 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { CounterModel } from '@/features/signing/modules/referral/models/counter.model';
+import {
+  MILESTONE_BOUNDARIES,
+  KOL_MAX_POSITION,
+  REGULAR_START_POSITION,
+} from '@/features/signing/config/milestone-boundaries.constants';
 
 export class PositionCounterService {
   private static readonly KOL_COUNTER_ID = 'kol_position';
   private static readonly REGULAR_COUNTER_ID = 'regular_position';
-  private static readonly KOL_MAX_POSITION = 75;
-  private static readonly REGULAR_START_POSITION = 76;
-
-  // Milestone boundaries with gaps (200 reserved positions between milestones)
-  private static readonly MILESTONE_BOUNDARIES = [
-    { max: 300, nextStart: 501 },      // Milestone 1 ends at 300, skip 301-500
-    { max: 4800, nextStart: 5001 },    // Milestone 2 ends at 4800, skip 4801-5000
-    { max: 19800, nextStart: 20001 },  // Milestone 3 ends at 19800, skip 19801-20000
-    { max: 49800, nextStart: 50001 },  // Milestone 4 ends at 49800, skip 49801-50000
-    // Milestone 5 has no upper limit
-  ];
+  private static readonly KOL_MAX_POSITION = KOL_MAX_POSITION;
+  private static readonly REGULAR_START_POSITION = REGULAR_START_POSITION;
 
   /**
    * Checks if position is at a milestone boundary and returns next valid position
@@ -22,7 +18,7 @@ export class PositionCounterService {
    * @returns The next valid position (same if not at boundary, or skipped to next milestone)
    */
   private static getNextValidPosition(position: number): number {
-    for (const boundary of this.MILESTONE_BOUNDARIES) {
+    for (const boundary of MILESTONE_BOUNDARIES) {
       if (position === boundary.max) {
         console.log(`Position ${position} hit milestone boundary. Skipping to ${boundary.nextStart}`);
         return boundary.nextStart;

@@ -80,6 +80,7 @@ export class ReferralCodeGenerator {
   static async createUserReferral(userData: {
     xId: string;
     username: string;
+    referredByCode?: string;
   }): Promise<string> {
     let referralCode = '';
     let isUnique = false;
@@ -108,7 +109,8 @@ export class ReferralCodeGenerator {
     await ReferralDbService.createReferralRecord({
       xId: userData.xId,
       referralCode: referralCode,
-      username: userData.username
+      username: userData.username,
+      referredByCode: userData.referredByCode
     });
 
     return referralCode;
@@ -122,7 +124,7 @@ export interface ReferralContext {
 }
 
 export class ReferralCookieManager {
-  private static readonly COOKIE_NAME = 'usdai_ref';
+  private static readonly COOKIE_NAME = 'sentient_ref';
   private static readonly COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
   static setCookie(response: Response, context: ReferralContext): void {
@@ -169,7 +171,7 @@ export class ReferralCookieManager {
     return Buffer.from(JSON.stringify(context)).toString('base64');
   }
 
-  private static decodeCookieValue(value: string): ReferralContext | null {
+  static decodeCookieValue(value: string): ReferralContext | null {
     try {
       const decoded = Buffer.from(value, 'base64').toString('utf-8');
       const context = JSON.parse(decoded) as ReferralContext;

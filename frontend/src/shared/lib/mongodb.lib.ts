@@ -139,16 +139,17 @@ export const initializeIndexes = async (): Promise<void> => {
     // Users Collection Indexes
     const usersCollection = db.collection(COLLECTIONS.USERS);
 
-    // Index for Twitter ID lookups (authentication)
+    // Index for X (Twitter) ID lookups (authentication)
+    // This is the primary identifier for users from Twitter OAuth
     await usersCollection.createIndex(
-      { twitterId: 1 },
-      { name: 'idx_twitterId', unique: true, background: true }
+      { xId: 1 },
+      { name: 'idx_xId', unique: true, background: true }
     );
 
-    // Index for session ID lookups
+    // Index for username lookups (for search and references)
     await usersCollection.createIndex(
-      { sessionId: 1 },
-      { name: 'idx_sessionId', background: true }
+      { username: 1 },
+      { name: 'idx_username', background: true }
     );
 
     console.log('✓ Database indexes initialized successfully');

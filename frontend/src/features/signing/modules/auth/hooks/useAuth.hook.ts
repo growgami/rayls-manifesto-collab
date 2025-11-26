@@ -8,6 +8,7 @@ export const useAuth = () => {
   const isAuthenticated = status === "authenticated";
   const user = session?.user;
   const twitterData = session?.user?.twitterData as TwitterUserData | undefined;
+  const referralCode = session?.user?.referralCode;
 
   const handleSignIn = () => signIn("twitter");
   const handleSignOut = () => signOut();
@@ -16,6 +17,7 @@ export const useAuth = () => {
     session: session as AuthSession | null,
     user,
     twitterData,
+    referralCode,
     isLoading,
     isAuthenticated,
     signIn: handleSignIn,

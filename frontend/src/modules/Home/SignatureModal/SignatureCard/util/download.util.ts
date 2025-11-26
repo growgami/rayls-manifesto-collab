@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { snapdom } from '@zumer/snapdom';
 
 interface DownloadCardOptions {
   /**
@@ -16,7 +16,7 @@ interface DownloadCardOptions {
 }
 
 /**
- * Downloads the signature card as a PNG image
+ * Downloads the signature card as a PNG image using Snapdom
  *
  * @param options - Configuration for the card download
  * @throws Error if the conversion or download fails
@@ -27,80 +27,38 @@ export const downloadSignatureCard = async ({
   signatureNumber,
 }: DownloadCardOptions): Promise<void> => {
   try {
-    // Find the gradient badge element and temporarily fix it for html2canvas
-    const badgeElement = cardRef.querySelector('.card-badge-number') as HTMLElement;
-    let originalStyles: { [key: string]: string } = {};
-
-    if (badgeElement) {
-      // Store original styles
-      originalStyles = {
-        background: badgeElement.style.background,
-        webkitBackgroundClip: badgeElement.style.webkitBackgroundClip,
-        backgroundClip: badgeElement.style.backgroundClip,
-        webkitTextFillColor: badgeElement.style.webkitTextFillColor,
-        color: badgeElement.style.color,
-      };
-
-      // Apply a solid gradient-like color that html2canvas can render
-      badgeElement.style.background = 'linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%)';
-      badgeElement.style.webkitBackgroundClip = 'text';
-      badgeElement.style.backgroundClip = 'text';
-      badgeElement.style.webkitTextFillColor = 'transparent';
-      badgeElement.style.color = 'transparent';
-    }
-
-    // Use html2canvas to capture the card element
-    const canvas = await html2canvas(cardRef, {
-      scale: 3, // 3x resolution for high quality images (increased from 2x)
+    // Use Snapdom to capture the card element
+    // Snapdom handles complex CSS, pseudo-elements, and absolute positioning better than html2canvas
+    const result = await snapdom(cardRef, {
+      scale: 3, // 3x resolution for high quality images
+      embedFonts: true, // Embed fonts to preserve typography
       backgroundColor: '#ffffff', // White background
-      useCORS: true, // Allow cross-origin images
-      allowTaint: false, // Prevent tainting canvas with cross-origin images
-      logging: false, // Disable console logging
-      imageTimeout: 15000, // 15 second timeout for image loading
-      removeContainer: true, // Clean up after rendering
-      width: cardRef.offsetWidth, // Explicitly set width
-      height: cardRef.offsetHeight, // Explicitly set height
-      windowWidth: cardRef.offsetWidth, // Set rendering window width
-      windowHeight: cardRef.offsetHeight, // Set rendering window height
-      onclone: (clonedDoc) => {
-        // Fix gradient in the cloned document
-        const clonedBadge = clonedDoc.querySelector('.card-badge-number') as HTMLElement;
-        if (clonedBadge) {
-          // Use a purple color as fallback since html2canvas struggles with background-clip: text
-          clonedBadge.style.background = 'none';
-          clonedBadge.style.webkitBackgroundClip = 'unset';
-          clonedBadge.style.backgroundClip = 'unset';
-          clonedBadge.style.webkitTextFillColor = '#b49aff';
-          clonedBadge.style.color = '#b49aff';
-        }
-      },
+      quality: 1.0, // Maximum quality for raster output
     });
 
-    // Restore original styles
-    if (badgeElement) {
-      Object.assign(badgeElement.style, originalStyles);
+    // Convert to PNG blob
+    const blob = await result.toBlob({
+      type: 'png',
+      quality: 1.0, // Maximum quality
+    });
+
+    if (!blob) {
+      throw new Error('Failed to create image blob');
     }
 
-    // Convert canvas to blob with maximum quality
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        throw new Error('Failed to create image blob');
-      }
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `rayls-manifesto-signature-${username}-${signatureNumber}.png`;
+    link.href = url;
 
-      // Create download link
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = `rayls-manifesto-signature-${username}-${signatureNumber}.png`;
-      link.href = url;
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
 
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }, 'image/png', 1.0); // Maximum quality (1.0)
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   } catch (error) {
     // Enhanced error logging for debugging
     console.error('Failed to download signature card:', {

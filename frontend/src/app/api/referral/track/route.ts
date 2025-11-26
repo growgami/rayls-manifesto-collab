@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     await referralModel.incrementLinkVisits(refCode);
+    console.log(`✅ Incremented link visits for ${refCode}`);
 
     const referralContext: ReferralContext = {
       referralCode: refCode,
@@ -37,6 +38,8 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.redirect(new URL('/', request.url));
     ReferralCookieManager.setCookie(response, referralContext);
+
+    console.log(`🍪 Set referral cookie - Code: ${refCode}, Referrer xId: ${referrer.xId}`);
 
     return response;
 

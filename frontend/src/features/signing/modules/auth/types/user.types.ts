@@ -15,6 +15,7 @@ export interface User {
   image?: string;
   twitterData?: TwitterUserData;
   dbUserId?: string;
+  referralCode?: string;
 }
 
 export interface AuthSession {

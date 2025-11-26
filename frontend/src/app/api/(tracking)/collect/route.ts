@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCollection, COLLECTIONS } from '@/shared/lib/mongodb.lib';
+import { getCollection, COLLECTIONS, getDatabase } from '@/shared/lib/mongodb.lib';
+import { ReferralModel } from '@/features/signing/modules/referral/models/referral.model';
 import type { UtmDataCreateInput } from '@/features/tracking/modules/utm/models/utmData.model';
 
 export async function POST(request: NextRequest) {
@@ -49,6 +50,18 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await utmCollection.insertOne(utmData);
+
+    // Increment linkVisits if referral code is present
+    if (referralCode) {
+      try {
+        const db = await getDatabase();
+        const referralModel = new ReferralModel(db);
+        await referralModel.incrementLinkVisits(referralCode);
+      } catch (refError) {
+        console.error('Error incrementing link visits:', refError);
+        // Don't fail the whole request if referral increment fails
+      }
+    }
 
     return NextResponse.json({
       utmId: result.insertedId.toString(),
