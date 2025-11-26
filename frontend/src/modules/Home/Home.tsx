@@ -1,26 +1,53 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 import "./Home.css";
 import { SignatureStrip } from "./SignatureStrip";
 import { useTracking } from "@/features/tracking/hooks/useTracking.hook";
 
 export const Home = () => {
+  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
+
   // Silent tracking - monitors user activity without displaying data
   useTracking();
+
+  useEffect(() => {
+    // Preload background image
+    const bgImage = new window.Image();
+    const imageSrc =
+      window.innerWidth <= 600
+        ? "/images/for-mobile.png"
+        : "/images/background.png";
+
+    bgImage.src = imageSrc;
+    bgImage.onload = () => {
+      setIsBackgroundLoaded(true);
+    };
+    bgImage.onerror = () => {
+      // If image fails to load, show content anyway
+      setIsBackgroundLoaded(true);
+    };
+  }, []);
+
+  // Show loading state while background image loads
+  if (!isBackgroundLoaded) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0a]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[var(--color-yellow)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[var(--color-foreground)] text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <SignatureStrip />
 
-      <div
-        // className="relative h-[160vh] flex mainContainer"
-        className="relative h-[200vh] flex mainContainer"
-        style={{
-          backgroundImage: 'url("/images/background.png")',
-        }}
-      >
+      <div className="relative h-[200vh] flex mainContainer">
         <main className="manifesto-article manifesto-article-top">
           <header className="manifesto-header">
             <Image
