@@ -11,9 +11,22 @@ export const Home = () => {
   const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Silent tracking - monitors user activity without displaying data
   useTracking();
+
+  // Detect mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const scrollToBottom = () => {
     window.scrollTo({
@@ -84,7 +97,11 @@ export const Home = () => {
       </div>
 
       <div
-        className="relative h-auto md:h-[200vh] flex bg-[url('/images/for-mobile.png')] md:bg-[url('/images/background.png')] bg-no-repeat bg-fixed bg-cover bg-[center_top] md:bg-[center_35%] shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]"
+        className="relative h-auto md:h-[200vh] flex bg-no-repeat bg-fixed bg-cover shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]"
+        style={{
+          backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.png')`,
+          backgroundPosition: isMobile ? 'center top' : 'center 35%'
+        }}
       >
         <main className="manifesto-article manifesto-article-top">
           <header className="manifesto-header">
@@ -96,7 +113,7 @@ export const Home = () => {
             />
           </header>
           <h1>The Rayls Manifesto</h1>
-          <h2 className="second-heading !text-[var(--color-yellow)]">
+          <h2 className="second-heading !text-[var(--color-white)]">
             The $100 Trillion Homecoming
           </h2>
           <p className="font-bold">
