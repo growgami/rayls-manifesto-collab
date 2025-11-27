@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import "./Referral.css";
+import { WalletInput } from "../WalletInput/WalletInput";
 
 interface ReferralProps {
   referralCode: string;
@@ -87,6 +88,11 @@ export const Referral = ({ referralCode }: ReferralProps) => {
       <div className="referral-code-display">
         <span className="referral-code-label">Code:</span>
         <span className="referral-code-value">{referralCode}</span>
+      </div>
+
+      {/* Wallet input rendered at the bottom of the referral card */}
+      <div className="referral-wallet-section">
+        <WalletInput />
       </div>
     </div>
   );

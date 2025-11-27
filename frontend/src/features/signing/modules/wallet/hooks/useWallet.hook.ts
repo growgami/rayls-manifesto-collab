@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/signing/modules/auth/hooks/useAuth.hook';
 import { IWallet } from '../types/wallet.types';
+import { WalletDTO } from '@/shared/types/dto.types';
 
 interface UseWalletReturn {
-  wallet: IWallet | null;
+  // The session stores the sanitized wallet DTO (xId removed),
+  // so consumers should expect the DTO shape rather than the full DB model.
+  wallet: WalletDTO | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -20,7 +23,7 @@ interface UseWalletReturn {
  */
 export const useWallet = (): UseWalletReturn => {
   const { isAuthenticated, user } = useAuth();
-  const [wallet, setWallet] = useState<IWallet | null>(null);
+  const [wallet, setWallet] = useState<WalletDTO | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const refetch = () => {
