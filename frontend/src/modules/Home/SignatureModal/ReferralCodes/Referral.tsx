@@ -85,11 +85,6 @@ export const Referral = ({ referralCode }: ReferralProps) => {
         </button>
       </div>
 
-      <div className="referral-code-display">
-        <span className="referral-code-label">Code:</span>
-        <span className="referral-code-value">{referralCode}</span>
-      </div>
-
       {/* Wallet input rendered at the bottom of the referral card */}
       <div className="referral-wallet-section">
         <WalletInput />

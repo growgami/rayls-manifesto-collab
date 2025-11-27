@@ -32,17 +32,19 @@
   flex-direction: column;
 }
 
-/* Expand modal for card view */
-.modal-content:has(.card-canvas) {
-  width: auto;
-  max-width: 95vw;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Expand modal for card view - only on desktop */
+@media (min-width: 768px) {
+  .modal-content:has(.card-canvas) {
+    width: auto;
+    max-width: 95vw;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .modal-overlay.closing .modal-content {
@@ -89,12 +91,14 @@
   }
 }
 
-/* Match header width to card canvas when in card view */
-.modal-content:has(.card-canvas) .modal-header {
-  width: 100%;
-  max-width: 850px;
-  padding: 24px 0;
-  margin-bottom: 16px;
+/* Match header width to card canvas when in card view - only on desktop */
+@media (min-width: 768px) {
+  .modal-content:has(.card-canvas) .modal-header {
+    width: 100%;
+    max-width: 850px;
+    padding: 24px 0;
+    margin-bottom: 16px;
+  }
 }
 
 .modal-title {

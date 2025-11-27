@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import "./Home.css";
 import { SignatureStrip } from "./SignatureStrip";
+import { SignatureModal } from "./SignatureModal/SignatureModal";
 import { useTracking } from "@/features/tracking/hooks/useTracking.hook";
 import { useAssetLoader } from "@/shared/hooks/useAssetLoader.hook";
 import { HOME_ASSETS } from "./config/assets.config";
@@ -106,6 +107,12 @@ export const Home = () => {
             />
           </header>
           <h1>The Rayls Manifesto</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="border-2 border-[var(--color-yellow)] text-[var(--color-yellow)] px-8 py-3 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity mb-8 bg-transparent"
+          >
+            Sign the Manifesto
+          </button>
           <h2 className="second-heading !text-[var(--color-white)]">
             The $100 Trillion Homecoming
           </h2>
@@ -368,6 +375,8 @@ export const Home = () => {
           </svg>
         </button>
       )}
+
+      <SignatureModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   );
 };

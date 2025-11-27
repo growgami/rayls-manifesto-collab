@@ -138,8 +138,35 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
         </div>
       </div>
 
-      {/* Mobile: Centered buttons only */}
-      <div className="flex w-full max-w-md flex-col gap-3 px-4 md:hidden">
+      {/* Mobile: Preview card with buttons below */}
+      <div className="flex w-full max-w-md flex-col items-center gap-4 px-4 md:hidden">
+        {/* Mobile card preview - scaled down */}
+        <div className="flex w-full justify-center -my-26">
+          <div className="card-canvas" style={{ transform: 'scale(0.4)', transformOrigin: 'center center' }}>
+            <div className="card-container" style={cardStyles}>
+              <div className="card-header">
+                <div className="card-profile">
+                  <img
+                    src={user.profileImageUrl}
+                    alt={`${user.name}'s profile`}
+                    width={80}
+                    height={80}
+                    className="card-avatar"
+                  />
+                  <div className="card-user-info">
+                    <h3 className="card-name">{user.name}</h3>
+                    <p className="card-username">@{user.username}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="card-signature-badge">
+                <span className="card-badge-number">#{signatureNumber.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile action buttons */}
         <button
           onClick={handleDownload}
           disabled={isDownloading}
