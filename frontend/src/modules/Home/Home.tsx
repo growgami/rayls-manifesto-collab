@@ -89,10 +89,11 @@ export const Home = () => {
       </div>
 
       <div
-        className="relative h-auto md:h-[200vh] flex bg-no-repeat bg-fixed bg-cover shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]"
+        className={`relative h-auto md:h-[200vh] flex bg-no-repeat bg-cover shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)] ${!isMobile ? 'md:bg-fixed' : ''}`}
         style={{
           backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.webp')`,
-          backgroundPosition: isMobile ? 'center top' : 'center 35%'
+          backgroundPosition: isMobile ? 'center top' : 'center 35%',
+          backgroundSize: isMobile ? 'contain' : 'cover'
         }}
       >
         <main className="manifesto-article manifesto-article-top">

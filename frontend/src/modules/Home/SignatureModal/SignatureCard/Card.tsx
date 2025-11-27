@@ -86,7 +86,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
             </div>
           </div>
           <div className="card-signature-badge">
-            <span className="card-badge-number">{signatureNumber.toLocaleString()}</span>
+            <span className="card-badge-number">#{signatureNumber.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
             </div>
           </div>
           <div className="card-signature-badge">
-            <span className="card-badge-number">{signatureNumber.toLocaleString()}</span>
+            <span className="card-badge-number">#{signatureNumber.toLocaleString()}</span>
           </div>
         </div>
 
@@ -125,9 +125,8 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
           <button
             onClick={() => {
-              const tweetText = `The Rayls manifesto just went live. The early passports are disappearing fast! Get yours before the train leaves the station. \n\n
-              
-              #${signatureNumber.toLocaleString()}! 🚂\n\n`;
+              const tweetText = `The Rayls manifesto just went live. The early passports are disappearing fast! Get yours before the train leaves the station.\n
+#${signatureNumber.toLocaleString()}!\n\n`;
               const tweetUrl = 'https://raylsmanifesto.com';
               const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
               window.open(twitterIntentUrl, '_blank', 'width=550,height=420');
@@ -151,8 +150,9 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
         <button
           onClick={() => {
-            const tweetText = `I just signed the Rayls Manifesto as signature #${signatureNumber.toLocaleString()}! 🚂\n\n`;
-            const tweetUrl = 'https://rayls.io';
+            const tweetText = `The Rayls manifesto just went live. The early passports are disappearing fast! Get yours before the train leaves the station.\n
+#${signatureNumber.toLocaleString()}! \n\n`;
+              const tweetUrl = 'https://raylsmanifesto.com';
             const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
             window.open(twitterIntentUrl, '_blank', 'width=550,height=420');
           }}

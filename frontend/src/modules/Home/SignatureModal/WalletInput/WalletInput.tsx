@@ -139,16 +139,6 @@ export const WalletInput = () => {
         Enter your EVM-compatible wallet address to receive future rewards.
       </p>
 
-      {/* EVM Address Format Hint */}
-      <div className="wallet-format-hint">
-        <p className="wallet-hint-title">EVM Address Format:</p>
-        <ul className="wallet-hint-list">
-          <li>Must start with <code>0x</code></li>
-          <li>Followed by 40 hexadecimal characters (0-9, a-f, A-F)</li>
-          <li>Works on Ethereum, Polygon, BSC, Arbitrum, and all EVM chains</li>
-        </ul>
-      </div>
-
       {/* Wallet address input */}
       <div className="wallet-input-section">
         <label htmlFor="wallet-address-input" className="wallet-input-label">
