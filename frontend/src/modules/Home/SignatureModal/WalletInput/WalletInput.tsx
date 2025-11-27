@@ -10,19 +10,11 @@ import "./WalletInput.css";
 export const WalletInput = () => {
   const { wallet, isLoading, error: fetchError, refetch } = useWallet();
 
-  // Form state
-  const [selectedBlockchain, setSelectedBlockchain] = useState<BlockchainType>('ETH');
+  // Form state (ETH is the only supported blockchain type)
   const [walletAddress, setWalletAddress] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Placeholders for different blockchains
-  const placeholders: Record<BlockchainType, string> = {
-    ETH: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-    SOL: '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV',
-    BTC: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-  };
 
   // Validate on blur
   const handleBlur = () => {
@@ -33,7 +25,7 @@ export const WalletInput = () => {
 
     const validation = WalletValidatorService.validateWalletAddress(
       walletAddress,
-      selectedBlockchain
+      'ETH'
     );
 
     if (!validation.valid) {
@@ -43,19 +35,12 @@ export const WalletInput = () => {
     }
   };
 
-  // Handle blockchain selection
-  const handleBlockchainChange = (blockchain: BlockchainType) => {
-    setSelectedBlockchain(blockchain);
-    setValidationError(null);
-    // Don't clear address - let user keep typing
-  };
-
   // Handle save
   const handleSave = async () => {
     // Validate before save
     const validation = WalletValidatorService.validateWalletAddress(
       walletAddress,
-      selectedBlockchain
+      'ETH'
     );
 
     if (!validation.valid) {
@@ -73,7 +58,7 @@ export const WalletInput = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           walletAddress,
-          blockchainType: selectedBlockchain,
+          blockchainType: 'ETH',
         }),
       });
 
@@ -122,9 +107,9 @@ export const WalletInput = () => {
     return (
       <div className="wallet-container">
         <div className="wallet-header">
-          <h3 className="wallet-title">Your Wallet</h3>
+          <h3 className="wallet-title">Your EVM Wallet</h3>
           <div className="wallet-badges">
-            <span className="wallet-blockchain-badge">{wallet.blockchainType}</span>
+            <span className="wallet-blockchain-badge">EVM</span>
             <span className="wallet-saved-badge">Saved</span>
           </div>
         </div>
@@ -146,56 +131,39 @@ export const WalletInput = () => {
   return (
     <div className="wallet-container">
       <div className="wallet-header">
-        <h3 className="wallet-title">Add Your Wallet</h3>
+        <h3 className="wallet-title">Submit your wallet to be apart of whats next</h3>
         <span className="wallet-required-badge">Required</span>
       </div>
 
       <p className="wallet-description">
-        Enter your cryptocurrency wallet address to receive future rewards.
+        Enter your EVM-compatible wallet address to receive future rewards.
       </p>
 
-      {/* Blockchain selector */}
-      <div className="wallet-blockchain-selector">
-        <button
-          className={`wallet-blockchain-btn ${
-            selectedBlockchain === 'ETH' ? 'active' : ''
-          }`}
-          onClick={() => handleBlockchainChange('ETH')}
-          disabled={isSaving}
-        >
-          Ethereum
-        </button>
-        <button
-          className={`wallet-blockchain-btn ${
-            selectedBlockchain === 'SOL' ? 'active' : ''
-          }`}
-          onClick={() => handleBlockchainChange('SOL')}
-          disabled={isSaving}
-        >
-          Solana
-        </button>
-        <button
-          className={`wallet-blockchain-btn ${
-            selectedBlockchain === 'BTC' ? 'active' : ''
-          }`}
-          onClick={() => handleBlockchainChange('BTC')}
-          disabled={isSaving}
-        >
-          Bitcoin
-        </button>
+      {/* EVM Address Format Hint */}
+      <div className="wallet-format-hint">
+        <p className="wallet-hint-title">EVM Address Format:</p>
+        <ul className="wallet-hint-list">
+          <li>Must start with <code>0x</code></li>
+          <li>Followed by 40 hexadecimal characters (0-9, a-f, A-F)</li>
+          <li>Works on Ethereum, Polygon, BSC, Arbitrum, and all EVM chains</li>
+        </ul>
       </div>
 
       {/* Wallet address input */}
       <div className="wallet-input-section">
+        <label htmlFor="wallet-address-input" className="wallet-input-label">
+          EVM-Compatible Address
+        </label>
         <input
+          id="wallet-address-input"
           type="text"
           value={walletAddress}
           onChange={(e) => setWalletAddress(e.target.value)}
           onBlur={handleBlur}
-          placeholder={placeholders[selectedBlockchain]}
+          placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
           className={`wallet-address-input ${validationError ? 'error' : ''}`}
           disabled={isSaving}
-          aria-label="Wallet address"
+          aria-label="EVM-compatible wallet address"
         />
       </div>
 

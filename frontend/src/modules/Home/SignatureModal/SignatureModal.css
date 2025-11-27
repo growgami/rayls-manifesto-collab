@@ -6,10 +6,12 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 10001;
   animation: fadeIn 0.2s ease-out;
+  overflow-y: auto;
+  padding: 20px 0;
 }
 
 .modal-overlay.closing {
@@ -19,11 +21,15 @@
 .modal-content {
   width: 510px;
   max-width: 95vw;
+  max-height: calc(100vh - 40px);
   background: #111111;
   border: 1px solid #ffffff26;
   box-shadow: 0 8px 32px #0006;
   border-radius: 10px;
   animation: scaleIn 0.2s ease-out;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Expand modal for card view */
@@ -66,8 +72,21 @@
 .modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 24px;
+  justify-content: center;
+  padding: 20px 16px;
+  flex-shrink: 0;
+  background: #111111;
+  border-bottom: 1px solid #ffffff1a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .modal-header {
+    padding: 24px;
+  }
 }
 
 /* Match header width to card canvas when in card view */
@@ -79,41 +98,72 @@
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   -webkit-text-fill-color: transparent;
   background: linear-gradient(135deg, #b49aff 0%, #ecfb3e 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+@media (min-width: 768px) {
+  .modal-title {
+    font-size: 22px;
+  }
 }
 
 .modal-close-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  background: transparent;
-  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  opacity: 0.9;
+  transition: all 0.2s;
+  background: #ffffff10;
+  border: 1px solid #ffffff15;
   cursor: pointer;
   color: white;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .modal-close-btn {
+    right: 24px;
+  }
 }
 
 .modal-close-btn:hover {
   opacity: 1;
+  background: #ffffff18;
+  border-color: #ffffff25;
 }
 
 .modal-close-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
+
 .modal-body {
-  padding: 24px;
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .modal-body {
+    padding: 24px;
+  }
 }
 
 .modal-body-inner {

@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { walletAddress, blockchainType } = body;
 
-    // Validate blockchain type
+    // Validate blockchain type (ETH only)
     if (!WalletValidatorService.isValidBlockchainType(blockchainType)) {
       return NextResponse.json(
         {
           success: false,
           error: WalletErrorCode.INVALID_BLOCKCHAIN,
-          message: 'Invalid blockchain type. Must be ETH, SOL, or BTC'
+          message: 'Only EVM-compatible addresses (ETH) are supported'
         },
         { status: 400 }
       );

@@ -59,7 +59,7 @@ export const MILESTONES: IMilestone[] = [
       angle: 135,
     },
     cardStyling: {
-      backgroundImage: "/images/cards/epic-card.webp",
+      backgroundImage: "/images/cards/rare-card.webp",
     },
   },
 

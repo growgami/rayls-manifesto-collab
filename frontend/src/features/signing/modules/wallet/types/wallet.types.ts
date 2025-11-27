@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 
-// Blockchain type enum
-export type BlockchainType = 'ETH' | 'SOL' | 'BTC';
+// Blockchain type enum (EVM-compatible chains only)
+export type BlockchainType = 'ETH';
 
 // Main wallet interface (database document)
 export interface IWallet {

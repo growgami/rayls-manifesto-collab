@@ -6,10 +6,19 @@ import { useSignatureCount } from "@/features/signing/modules/signature/hooks/us
 import "./SignatureStrip.css";
 import { SignatureModal } from "../SignatureModal";
 
-export const SignatureStrip = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface SignatureStripProps {
+  isModalOpen?: boolean;
+  setIsModalOpen?: (isOpen: boolean) => void;
+}
+
+export const SignatureStrip = ({ isModalOpen: externalIsModalOpen, setIsModalOpen: externalSetIsModalOpen }: SignatureStripProps) => {
+  const [internalIsModalOpen, setInternalIsModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const { data: signatureCount, isLoading: countLoading } = useSignatureCount();
+
+  // Use external state if provided, otherwise use internal state
+  const isModalOpen = externalIsModalOpen !== undefined ? externalIsModalOpen : internalIsModalOpen;
+  const setIsModalOpen = externalSetIsModalOpen || setInternalIsModalOpen;
 
   // Auto-open modal if user just authenticated
   useEffect(() => {

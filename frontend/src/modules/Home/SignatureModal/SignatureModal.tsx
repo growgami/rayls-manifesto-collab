@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
 import { useUserPosition } from "@/features/signing/modules/signature/hooks/useUserPosition.hook";
 import { useUserReferral } from "@/features/signing/modules/referral/hooks/useUserReferral.hook";
@@ -19,6 +19,19 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const { isAuthenticated, isLoading, twitterData, signIn } = useAuth();
   const { data: userPosition, isLoading: positionLoading } = useUserPosition();
   const { referralCode } = useUserReferral();
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen && !isClosing) return null;
 
