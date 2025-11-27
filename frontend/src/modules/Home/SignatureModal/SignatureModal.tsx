@@ -88,8 +88,11 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
                   }}
                   signatureNumber={userPosition || 0}
                 />
-                {referralCode && <Referral referralCode={referralCode} />}
-                <WalletInput />
+                {referralCode ? (
+                  <Referral referralCode={referralCode} />
+                ) : (
+                  <WalletInput />
+                )}
               </div>
             </div>
           )}
