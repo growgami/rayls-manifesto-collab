@@ -30,7 +30,7 @@ export const downloadSignatureCard = async ({
     // Use Snapdom to capture the card element
     // Snapdom handles complex CSS, pseudo-elements, and absolute positioning better than html2canvas
     const result = await snapdom(cardRef, {
-      scale: 3, // 3x resolution for high quality images
+      scale: 1, // 3x resolution for high quality images
       embedFonts: true, // Embed fonts to preserve typography
       backgroundColor: '#ffffff', // White background
       quality: 1.0, // Maximum quality for raster output

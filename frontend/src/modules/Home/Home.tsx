@@ -6,15 +6,27 @@ import { useEffect, useState } from "react";
 import "./Home.css";
 import { SignatureStrip } from "./SignatureStrip";
 import { useTracking } from "@/features/tracking/hooks/useTracking.hook";
+import { useAssetLoader } from "@/shared/hooks/useAssetLoader.hook";
+import { HOME_ASSETS } from "./config/assets.config";
 
 export const Home = () => {
-  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   // Silent tracking - monitors user activity without displaying data
   useTracking();
+
+  // Preload all assets (backgrounds + card images)
+  const { isLoading: isAssetsLoading, progress } = useAssetLoader({
+    assets: HOME_ASSETS,
+    onComplete: (results) => {
+      const failedCount = results.filter((r) => !r.success).length;
+      if (failedCount > 0) {
+        console.warn(`${failedCount} assets failed to load, but continuing anyway`);
+      }
+    },
+  });
 
   // Detect mobile on mount
   useEffect(() => {
@@ -35,31 +47,6 @@ export const Home = () => {
     });
   };
 
-  useEffect(() => {
-    // Preload both background images to ensure CSS has them cached
-    const mobileImage = new window.Image();
-    const desktopImage = new window.Image();
-
-    mobileImage.src = "/images/for-mobile.png";
-    desktopImage.src = "/images/background.png";
-
-    let loadedCount = 0;
-    const totalImages = 2;
-
-    const checkAllLoaded = () => {
-      loadedCount++;
-      if (loadedCount === totalImages) {
-        setIsBackgroundLoaded(true);
-      }
-    };
-
-    mobileImage.onload = checkAllLoaded;
-    mobileImage.onerror = checkAllLoaded; // Show content even if image fails
-
-    desktopImage.onload = checkAllLoaded;
-    desktopImage.onerror = checkAllLoaded; // Show content even if image fails
-  }, []);
-
   // Handle scroll button visibility based on scroll position
   useEffect(() => {
     const handleScroll = () => {
@@ -78,13 +65,18 @@ export const Home = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Show loading state while background image loads
-  if (!isBackgroundLoaded) {
+  // Show loading state while assets are loading
+  if (isAssetsLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[var(--color-yellow)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-[var(--color-foreground)] text-lg">Loading...</p>
+          {progress.percentage > 0 && (
+            <p className="text-[var(--color-foreground)] text-sm mt-2">
+              {progress.percentage}%
+            </p>
+          )}
         </div>
       </div>
     );
@@ -99,14 +91,14 @@ export const Home = () => {
       <div
         className="relative h-auto md:h-[200vh] flex bg-no-repeat bg-fixed bg-cover shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]"
         style={{
-          backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.png')`,
+          backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.webp')`,
           backgroundPosition: isMobile ? 'center top' : 'center 35%'
         }}
       >
         <main className="manifesto-article manifesto-article-top">
           <header className="manifesto-header">
             <Image
-              src="/images/Rayls_Logo_Gradient.png"
+              src="/images/Rayls_Logo_Gradient.webp"
               alt="Description"
               width={150}
               height={56}
