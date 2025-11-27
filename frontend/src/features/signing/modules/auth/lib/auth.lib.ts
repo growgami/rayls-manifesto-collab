@@ -2,6 +2,9 @@ import { NextAuthOptions, getServerSession as nextAuthGetServerSession } from "n
 import TwitterProvider from "next-auth/providers/twitter";
 import { TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
 import { AuthUserService } from "@/features/signing/services/signing.service";
+import { getDatabase } from "@/shared/lib/mongodb.lib";
+import { WalletModel } from "@/features/signing/modules/wallet/models/wallet.model";
+import { ReferralModel } from "@/features/signing/modules/referral/models/referral.model";
 
 /**
  * Upgrades Twitter profile image URL from low-res to original high-res
@@ -65,19 +68,49 @@ export const authOptions: NextAuthOptions = {
             twitterData: user.twitterData as TwitterUserData,
           };
 
+          const xId = userData.twitterData.id;
+
+          // Fetch user + wallet + referral data in parallel during OAuth
           // Add timeout protection to prevent OAuth callback delays
-          const result = await Promise.race([
-            AuthUserService.processAuthenticatedUser(userData),
+          const [userResult, db] = await Promise.race([
+            Promise.all([
+              AuthUserService.processAuthenticatedUser(userData),
+              getDatabase()
+            ]),
             new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Database operation timeout')), 3000)
+              setTimeout(() => reject(new Error('Database operation timeout')), 4000)
+            )
+          ]);
+
+          // Fetch wallet and referral data with timeout
+          const [wallet, referral] = await Promise.race([
+            Promise.all([
+              new WalletModel(db).findByXId(xId),
+              new ReferralModel(db).findByXId(xId)
+            ]),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Additional data fetch timeout')), 2000)
             )
           ]);
 
           // Store successful results
           token.twitterData = userData.twitterData;
-          token.dbUserId = result.user._id?.toString();
-          token.isNewUser = result.isNewUser;
-          token.referralCode = result.referralCode;
+          token.dbUserId = userResult.user._id?.toString();
+          token.isNewUser = userResult.isNewUser;
+          token.referralCode = userResult.referralCode;
+          token.wallet = wallet ? {
+            walletAddress: wallet.walletAddress,
+            blockchainType: wallet.blockchainType,
+            createdAt: wallet.createdAt
+          } : null;
+          token.referralData = referral ? {
+            referralCode: referral.referralCode,
+            position: referral.position,
+            referralCount: referral.referralCount,
+            linkVisits: referral.linkVisits,
+            isKOL: referral.isKOL
+          } : null;
+          token.position = referral?.position;
           token.processingComplete = true;
           token.needsProcessing = false;
         } catch (error) {
@@ -125,9 +158,20 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Always include Twitter data
+      // Include only necessary Twitter data (minimize exposure)
       if (token.twitterData) {
-        session.user.twitterData = token.twitterData as TwitterUserData;
+        const fullData = token.twitterData as TwitterUserData;
+        // Only expose fields actually used in the UI
+        session.user.twitterData = {
+          id: fullData.id,
+          name: fullData.name,
+          username: fullData.username,
+          profile_image_url: fullData.profile_image_url,
+          // Excluded: created_at, description, url (not displayed in UI)
+          created_at: '',
+          description: '',
+          url: '',
+        } as TwitterUserData;
       }
 
       // Transfer processed data to session
@@ -140,6 +184,28 @@ export const authOptions: NextAuthOptions = {
         }
         if (token.referralCode) {
           session.user.referralCode = token.referralCode as string;
+        }
+        // Transfer wallet data to session
+        if (token.wallet) {
+          session.user.wallet = token.wallet as {
+            walletAddress: string;
+            blockchainType: any;
+            createdAt: Date;
+          };
+        }
+        // Transfer referral data to session
+        if (token.referralData) {
+          session.user.referralData = token.referralData as {
+            referralCode: string;
+            position: number;
+            referralCount: number;
+            linkVisits: number;
+            isKOL: boolean;
+          };
+        }
+        // Transfer position to session
+        if (token.position !== undefined) {
+          session.user.position = token.position as number;
         }
       } else if (token.needsProcessing) {
         // Signal to client that background processing may be needed

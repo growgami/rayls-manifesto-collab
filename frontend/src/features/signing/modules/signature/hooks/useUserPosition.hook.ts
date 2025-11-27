@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/signing/modules/auth/hooks/useAuth.hook';
 
 interface UseUserPositionReturn {
@@ -9,49 +8,23 @@ interface UseUserPositionReturn {
   error: string | null;
 }
 
+/**
+ * useUserPosition Hook
+ *
+ * Now reads position data from NextAuth session instead of making API calls.
+ * This eliminates the GET /api/signature/position request from the network tab.
+ *
+ * The position is fetched during OAuth callback and stored in the session.
+ */
 export function useUserPosition(): UseUserPositionReturn {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const [data, setData] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Wait for auth to resolve
-    if (authLoading) {
-      return;
-    }
+  // Read position directly from session (no API call)
+  const position = user?.position;
 
-    // Only fetch if authenticated
-    if (!isAuthenticated) {
-      setIsLoading(false);
-      setData(null);
-      setError(null);
-      return;
-    }
-
-    const fetchPosition = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/signature/position');
-        const result = await response.json();
-
-        if (result.success) {
-          setData(result.position);
-          setError(null);
-        } else {
-          throw new Error(result.error || 'Failed to fetch user position');
-        }
-      } catch (err) {
-        console.error('Error fetching user position:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosition();
-  }, [isAuthenticated, authLoading]);
-
-  return { data, isLoading, error };
+  return {
+    data: position || null,
+    isLoading: false, // No loading state - data comes from session
+    error: null, // No error state - session always succeeds
+  };
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWallet } from "@/features/signing/modules/wallet/hooks/useWallet.hook";
 import { WalletValidatorService } from "@/features/signing/modules/wallet/services/walletValidator.service";
 import { BlockchainType } from "@/features/signing/modules/wallet/types/wallet.types";
+import { refreshSession } from "@/features/signing/modules/auth/utils/sessionRefresh.util";
 import "./WalletInput.css";
 
 export const WalletInput = () => {
@@ -86,10 +87,13 @@ export const WalletInput = () => {
       // Success: show message and transition to display mode
       setSuccessMessage('Wallet saved successfully!');
 
+      // Refresh session to include new wallet data
+      await refreshSession();
+
       // Auto-transition to display mode after brief success message
       setTimeout(() => {
         setSuccessMessage(null);
-        refetch(); // Trigger re-fetch to show display mode
+        refetch(); // Trigger re-read from session to show display mode
       }, 1500);
     } catch (error) {
       console.error('Error saving wallet:', error);

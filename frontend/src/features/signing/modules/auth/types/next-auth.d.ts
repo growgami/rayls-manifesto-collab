@@ -1,4 +1,5 @@
 import { TwitterUserData } from "./user.types";
+import { BlockchainType } from "@/features/signing/modules/wallet/types/wallet.types";
 
 declare module "next-auth" {
   interface Session {
@@ -12,6 +13,19 @@ declare module "next-auth" {
       isNewUser?: boolean;
       referralCode?: string;
       needsBackgroundProcessing?: boolean;
+      wallet?: {
+        walletAddress: string;
+        blockchainType: BlockchainType;
+        createdAt: Date;
+      };
+      referralData?: {
+        referralCode: string;
+        position: number;
+        referralCount: number;
+        linkVisits: number;
+        isKOL: boolean;
+      };
+      position?: number;
     };
   }
 
@@ -40,5 +54,18 @@ declare module "next-auth/jwt" {
       image?: string;
       twitterData: TwitterUserData;
     };
+    wallet?: {
+      walletAddress: string;
+      blockchainType: BlockchainType;
+      createdAt: Date;
+    } | null;
+    referralData?: {
+      referralCode: string;
+      position: number;
+      referralCount: number;
+      linkVisits: number;
+      isKOL: boolean;
+    } | null;
+    position?: number;
   }
 }

@@ -9,11 +9,18 @@ interface UseWalletReturn {
   refetch: () => void;
 }
 
+/**
+ * useWallet Hook
+ *
+ * Now reads wallet data from NextAuth session instead of making API calls.
+ * This eliminates the GET /api/wallet request from the network tab.
+ *
+ * The wallet data is fetched during OAuth callback and stored in the session.
+ * Call refetch() after creating a wallet to trigger session refresh.
+ */
 export const useWallet = (): UseWalletReturn => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [wallet, setWallet] = useState<IWallet | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const refetch = () => {
@@ -21,45 +28,19 @@ export const useWallet = (): UseWalletReturn => {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
+      setWallet(null);
       return;
     }
 
-    const fetchWallet = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch('/api/wallet');
-        const result = await response.json();
-
-        // 404 is not an error - it means no wallet exists
-        if (response.status === 404) {
-          setWallet(null);
-          setError(null);
-          return;
-        }
-
-        if (!result.success) {
-          throw new Error(result.message || 'Failed to fetch wallet');
-        }
-
-        setWallet(result.wallet);
-      } catch (err) {
-        console.error('Error fetching wallet:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWallet();
-  }, [isAuthenticated, refetchTrigger]);
+    // Read wallet directly from session (no API call)
+    setWallet(user.wallet || null);
+  }, [isAuthenticated, user, user?.wallet, refetchTrigger]);
 
   return {
     wallet,
-    isLoading,
-    error,
+    isLoading: false, // No loading state needed - data comes from session
+    error: null, // No error state needed - session always succeeds
     refetch,
   };
 };

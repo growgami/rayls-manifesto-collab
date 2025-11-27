@@ -4,65 +4,12 @@ import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { WalletModel } from '@/features/signing/modules/wallet/models/wallet.model';
 import { WalletValidatorService } from '@/features/signing/modules/wallet/services/walletValidator.service';
 import { WalletErrorCode, BlockchainType } from '@/features/signing/modules/wallet/types/wallet.types';
+import { DTOService } from '@/shared/services/dto.service';
 
 /**
- * GET /api/wallet
- * Fetch authenticated user's wallet
- * Returns 404 if no wallet exists
+ * GET handler removed - wallet data now comes from session
+ * This eliminates sensitive data exposure in network tab
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Auth check
-    const session = await getServerSession();
-    if (!session || !session.user?.twitterData) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: WalletErrorCode.UNAUTHORIZED,
-          message: 'Authentication required'
-        },
-        { status: 401 }
-      );
-    }
-
-    const xId = session.user.twitterData.id;
-    const db = await getDatabase();
-    const walletModel = new WalletModel(db);
-
-    const wallet = await walletModel.findByXId(xId);
-
-    if (!wallet) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: WalletErrorCode.WALLET_NOT_FOUND,
-          message: 'No wallet found for this user'
-        },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      wallet: {
-        xId: wallet.xId,
-        walletAddress: wallet.walletAddress,
-        blockchainType: wallet.blockchainType,
-        createdAt: wallet.createdAt,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching wallet:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: WalletErrorCode.SERVER_ERROR,
-        message: 'Failed to fetch wallet'
-      },
-      { status: 500 }
-    );
-  }
-}
 
 /**
  * POST /api/wallet
@@ -139,15 +86,11 @@ export async function POST(request: NextRequest) {
       blockchainType: blockchainType as BlockchainType,
     });
 
+    // Use DTO service to sanitize response (removes xId and _id)
     return NextResponse.json(
       {
         success: true,
-        wallet: {
-          xId: wallet.xId,
-          walletAddress: wallet.walletAddress,
-          blockchainType: wallet.blockchainType,
-          createdAt: wallet.createdAt,
-        },
+        wallet: DTOService.sanitizeWallet(wallet),
       },
       { status: 201 }
     );
