@@ -20,15 +20,10 @@ export interface MilestoneBoundary {
 
 /**
  * Milestone boundaries with reserved gaps between them.
- * Each milestone has 200 reserved positions following its max.
+ * Positions 1-500 are reserved and never assigned.
+ * Regular positions start at 501.
  */
 export const MILESTONE_BOUNDARIES: MilestoneBoundary[] = [
-  {
-    max: 300,
-    gapStart: 301,
-    gapEnd: 500,
-    nextStart: 501,
-  },
   {
     max: 4800,
     gapStart: 4801,
@@ -50,19 +45,14 @@ export const MILESTONE_BOUNDARIES: MilestoneBoundary[] = [
 ];
 
 /**
- * KOL-specific constants
- */
-export const KOL_MAX_POSITION = 75;
-export const REGULAR_START_POSITION = 76;
-
-/**
  * Helper function to get milestone ranges for UI display
  * Converts boundary data into min/max ranges
+ * Positions 1-500 are reserved, so ranges start from 501
  */
 export function getMilestoneRanges() {
   const ranges = [
     {
-      min: 1,
+      min: 501,
       max: MILESTONE_BOUNDARIES[0].max,
     },
   ];

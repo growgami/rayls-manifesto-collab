@@ -1,7 +1,6 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { ReferralModel, IReferralCreate } from '@/features/signing/modules/referral/models/referral.model';
 import { PositionCounterService } from '@/features/signing/modules/referral/utils/positionCounter.util';
-import { KolService } from '@/features/signing/modules/kol/services/kol.service';
 
 export class ReferralDbService {
   static async createReferralRecord(userData: {
@@ -13,29 +12,8 @@ export class ReferralDbService {
     const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
-    // Check if user is a KOL
-    const isKol = await KolService.isKol(userData.xId, userData.username);
-
-    // Get appropriate position based on KOL status
-    let position: number;
-    let actualIsKol: boolean;
-
-    if (isKol) {
-      const kolPosition = await PositionCounterService.getNextKolPosition();
-      if (kolPosition <= 75) {
-        position = kolPosition;
-        actualIsKol = true;
-        console.log(`✨ KOL detected: ${userData.username} assigned position ${position}`);
-      } else {
-        // KOL overflow - treat as regular user
-        position = await PositionCounterService.getNextRegularPosition();
-        actualIsKol = false;
-        console.log(`⚠️ KOL overflow: ${userData.username} assigned regular position ${position}`);
-      }
-    } else {
-      position = await PositionCounterService.getNextRegularPosition();
-      actualIsKol = false;
-    }
+    // Get next position (unified counter starting at 501)
+    const position = await PositionCounterService.getNextPosition();
 
     // Check if user was referred
     let referredBy: string | null = null;
@@ -59,7 +37,7 @@ export class ReferralDbService {
       referralCount: 0,
       linkVisits: 0,
       position: position,
-      isKOL: actualIsKol
+      isKOL: false // Deprecated field, kept for backward compatibility
     };
 
     console.log(`📝 Creating referral record:`, {
@@ -67,7 +45,6 @@ export class ReferralDbService {
       username: userData.username,
       referralCode: userData.referralCode,
       position,
-      isKOL: actualIsKol,
       referredBy: referredBy || 'none'
     });
 
