@@ -20,6 +20,19 @@ export const SignatureStrip = ({ isModalOpen: externalIsModalOpen, setIsModalOpe
   const isModalOpen = externalIsModalOpen !== undefined ? externalIsModalOpen : internalIsModalOpen;
   const setIsModalOpen = externalSetIsModalOpen || setInternalIsModalOpen;
 
+  // Format number with k/m suffix
+  const formatCount = (count: number): string => {
+    const boostedCount = count + 500;
+
+    if (boostedCount < 1000) {
+      return boostedCount.toString();
+    } else if (boostedCount < 1000000) {
+      return (boostedCount / 1000).toFixed(1) + 'k';
+    } else {
+      return (boostedCount / 1000000).toFixed(1) + 'm';
+    }
+  };
+
   // Auto-open modal if user just authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -33,7 +46,7 @@ export const SignatureStrip = ({ isModalOpen: externalIsModalOpen, setIsModalOpe
         <div className="signature-row">
           <p className="sig-title">SIGNATURES</p>
           <p className="sig-count">
-            {countLoading ? '...' : (signatureCount?.toLocaleString() || '0')}
+            {countLoading ? '...' : formatCount(signatureCount || 0)}
           </p>
         </div>
         <button className="sig-btn" onClick={() => setIsModalOpen(true)}>
