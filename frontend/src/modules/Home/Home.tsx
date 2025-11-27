@@ -13,6 +13,13 @@ export const Home = () => {
   // Silent tracking - monitors user activity without displaying data
   useTracking();
 
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+
   useEffect(() => {
     // Preload background image
     const bgImage = new window.Image();
@@ -45,7 +52,9 @@ export const Home = () => {
 
   return (
     <>
-      <SignatureStrip />
+      <div className="hidden md:block">
+        <SignatureStrip />
+      </div>
 
       <div className="relative h-[200vh] flex mainContainer">
         <main className="manifesto-article manifesto-article-top">
@@ -241,6 +250,31 @@ export const Home = () => {
           </p>
         </div>
       </main>
+
+      <div className="block md:hidden signature-strip-embedded">
+        <SignatureStrip />
+      </div>
+
+      <button
+        onClick={scrollToBottom}
+        className="fixed bottom-6 right-6 bg-white text-black p-4 rounded-full shadow-lg hover:opacity-90 transition-opacity z-[10001]"
+        aria-label="Skip to signature"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"
+          />
+        </svg>
+      </button>
     </>
   );
 };
