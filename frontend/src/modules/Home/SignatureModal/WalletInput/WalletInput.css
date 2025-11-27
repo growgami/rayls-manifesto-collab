@@ -1,0 +1,263 @@
+/* Container - matches Referral.css pattern */
+.wallet-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: #111111;
+  border: 1px solid #ffffff26;
+  border-radius: 10px;
+  flex: 1;
+  min-width: 0;
+  max-width: 450px;
+}
+
+/* Header section */
+.wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.wallet-badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wallet-required-badge {
+  padding: 4px 10px;
+  background: #b49aff;
+  color: black;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wallet-saved-badge {
+  padding: 4px 10px;
+  background: #8cf78b;
+  color: black;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.wallet-blockchain-badge {
+  padding: 4px 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Description */
+.wallet-description {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Blockchain selector */
+.wallet-blockchain-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.wallet-blockchain-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #a1a1aa;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wallet-blockchain-btn:hover:not(:disabled) {
+  border-color: #555;
+  background: #222;
+}
+
+.wallet-blockchain-btn.active {
+  background: #b49aff;
+  color: black;
+  border-color: #b49aff;
+}
+
+.wallet-blockchain-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input section */
+.wallet-input-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.wallet-address-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.wallet-address-input:focus {
+  border-color: #555;
+}
+
+.wallet-address-input.error {
+  border-color: #ff4444;
+}
+
+.wallet-address-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wallet-address-input::placeholder {
+  color: #555;
+}
+
+/* Error and success messages */
+.wallet-error-message {
+  padding: 10px 14px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #ff6b6b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.wallet-success-message {
+  padding: 10px 14px;
+  background: rgba(140, 247, 139, 0.1);
+  border: 1px solid rgba(140, 247, 139, 0.3);
+  border-radius: 6px;
+  color: #8cf78b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Save button */
+.wallet-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  background: white;
+  color: black;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  min-height: 44px;
+}
+
+.wallet-save-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.wallet-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Display mode */
+.wallet-display {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wallet-address-box {
+  padding: 14px 18px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+}
+
+.wallet-address-masked {
+  font-size: 16px;
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.wallet-immutable-notice {
+  font-size: 13px;
+  color: #71717a;
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Loading state */
+.wallet-loading {
+  padding: 20px;
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 14px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .wallet-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .wallet-container {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .wallet-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wallet-blockchain-selector {
+    flex-direction: column;
+  }
+
+  .wallet-blockchain-btn {
+    width: 100%;
+  }
+
+  .wallet-address-input {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .wallet-save-btn {
+    width: 100%;
+  }
+}

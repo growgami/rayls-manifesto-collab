@@ -6,6 +6,7 @@ import { useUserPosition } from "@/features/signing/modules/signature/hooks/useU
 import { useUserReferral } from "@/features/signing/modules/referral/hooks/useUserReferral.hook";
 import { Card } from "./SignatureCard/Card";
 import { Referral } from "./ReferralCodes/Referral";
+import { WalletInput } from "./WalletInput/WalletInput";
 import "./SignatureModal.css";
 
 interface SignatureModalProps {
@@ -88,6 +89,7 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
                   signatureNumber={userPosition || 0}
                 />
                 {referralCode && <Referral referralCode={referralCode} />}
+                <WalletInput />
               </div>
             </div>
           )}
