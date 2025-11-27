@@ -1,12 +1,4 @@
-.mainContainer {
-  background-image: url("/images/background.png");
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center 35%;
-  z-index: -1;
-  box-shadow: inset 0 -50px 50px -30px rgba(0, 0, 0, 0.7);
-}
+/* Background styling now handled by Tailwind in Home.tsx */
 
 .manifesto-header {
   display: flex;
@@ -126,14 +118,9 @@
   }
 }
 @media (max-width: 768px) {
-  .mainContainer {
-    height: auto !important;
-    .manifesto-article {
-      margin-bottom: 0px !important;
-    }
-  }
   .manifesto-article {
     padding-bottom: 0.5em;
+    margin-bottom: 0px !important;
   }
 }
 @media (min-width: 640px) {
@@ -148,12 +135,7 @@
     width: 100%;
   }
 }
-@media (max-width: 600px) {
-  .mainContainer {
-    background-image: url("/images/for-mobile.png");
-    background-position: center top;
-  }
-}
+/* Mobile background now handled by Tailwind in Home.tsx */
 @media (max-width: 300px) {
   .manifesto-article h1 {
     font-size: 1.5rem;

@@ -83,7 +83,9 @@ export const Home = () => {
         <SignatureStrip isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
       </div>
 
-      <div className="relative h-[200vh] flex mainContainer">
+      <div
+        className="relative h-auto md:h-[200vh] flex bg-[url('/images/for-mobile.png')] md:bg-[url('/images/background.png')] bg-no-repeat bg-fixed bg-cover bg-[center_top] md:bg-[center_35%] shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]"
+      >
         <main className="manifesto-article manifesto-article-top">
           <header className="manifesto-header">
             <Image
