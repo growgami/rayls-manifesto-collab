@@ -18,7 +18,8 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const [isClosing, setIsClosing] = useState(false);
   const { isAuthenticated, isLoading, twitterData, signIn, insufficientFollowers, minFollowersRequired } = useAuth();
   const { data: userPosition, isLoading: positionLoading } = useUserPosition();
-  const { referralCode } = useUserReferral();
+  const { referralCode, data: referralData } = useUserReferral();
+  const isKOL = referralData?.isKOL || false;
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -91,6 +92,57 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
                 <p className="modal-description">
                   To prevent farming and reward our legitimate community, you need at least <strong>{minFollowersRequired} followers</strong> on X to sign the manifesto and receive your signature card.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show KOL special UI if authenticated and is KOL
+  if (isAuthenticated && twitterData && isKOL) {
+    return (
+      <div className={`modal-overlay ${isClosing ? "closing" : ""}`} onClick={handleClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 className="modal-title">Welcome, OG!</h2>
+            <button className="modal-close-btn" onClick={handleClose}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+          <div className="modal-body">
+            <div className="modal-body-inner">
+              <div className="modal-text-section">
+                <h3 className="modal-subtitle">You are an OG</h3>
+                <p className="modal-description">
+                  Thank you for being one of our earliest supporters! We&apos;ve prepared something special for you.
+                </p>
+              </div>
+              <div className="modal-actions">
+                <a
+                  href="https://claim.raylsmanifesto.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-sign-btn"
+                >
+                  Claim Your Special Card
+                </a>
               </div>
             </div>
           </div>

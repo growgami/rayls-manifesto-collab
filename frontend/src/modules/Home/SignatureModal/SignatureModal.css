@@ -32,6 +32,13 @@
   flex-direction: column;
 }
 
+/* Allow modal to fill more viewport on desktop */
+@media (min-width: 768px) {
+  .modal-content {
+    max-height: 95vh;
+  }
+}
+
 /* Expand modal for card view - only on desktop */
 @media (min-width: 768px) {
   .modal-content:has(.card-canvas) {

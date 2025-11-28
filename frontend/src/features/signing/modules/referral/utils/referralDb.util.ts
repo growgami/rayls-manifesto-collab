@@ -1,6 +1,7 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { ReferralModel, IReferralCreate } from '@/features/signing/modules/referral/models/referral.model';
 import { PositionCounterService } from '@/features/signing/modules/referral/utils/positionCounter.util';
+import { KolCheckService } from '@/features/signing/modules/referral/services/kolCheck.service';
 
 export class ReferralDbService {
   static async createReferralRecord(userData: {
@@ -12,8 +13,19 @@ export class ReferralDbService {
     const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
-    // Get next position (unified counter starting at 501)
-    const position = await PositionCounterService.getNextPosition();
+    // Check if user is a KOL
+    const kolEntry = KolCheckService.checkIsKol(userData.xId);
+    const isKOL = !!kolEntry;
+
+    // Use KOL position if available, otherwise get next auto-increment position
+    let position: number;
+    if (kolEntry) {
+      position = kolEntry.position;
+      console.log(`👑 KOL detected: ${userData.username} (xId: ${userData.xId}) - Assigned position ${position}`);
+    } else {
+      position = await PositionCounterService.getNextPosition();
+      console.log(`📝 Regular user: ${userData.username} - Assigned position ${position}`);
+    }
 
     // Check if user was referred
     let referredBy: string | null = null;
@@ -37,7 +49,7 @@ export class ReferralDbService {
       referralCount: 0,
       linkVisits: 0,
       position: position,
-      isKOL: false // Deprecated field, kept for backward compatibility
+      isKOL: isKOL // Set to true for KOLs based on kols.json
     };
 
     console.log(`📝 Creating referral record:`, {
