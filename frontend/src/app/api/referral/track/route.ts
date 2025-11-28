@@ -7,10 +7,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const refCode = searchParams.get('ref');
-    const origin = new URL(request.url).origin;
+
+    // Get the actual host from headers (forwarded by nginx)
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = `${protocol}://${host}`;
 
     console.log(`[REFERRAL-TRACK] request.url: ${request.url}`);
-    console.log(`[REFERRAL-TRACK] origin: ${origin}`);
+    console.log(`[REFERRAL-TRACK] host header: ${host}`);
+    console.log(`[REFERRAL-TRACK] protocol: ${protocol}`);
+    console.log(`[REFERRAL-TRACK] constructed origin: ${origin}`);
     console.log(`[REFERRAL-TRACK] refCode: ${refCode}`);
 
     if (!refCode) {
