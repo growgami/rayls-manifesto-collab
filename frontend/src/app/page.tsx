@@ -1,5 +1,5 @@
 import { Home } from "@/modules";
-import { redirect } from 'next/navigation';
+import { ReferralRedirect } from "@/components/ReferralRedirect";
 
 interface HomePageProps {
   searchParams: Promise<{ ref?: string }>;
@@ -11,7 +11,7 @@ const HomePage = async ({ searchParams }: HomePageProps) => {
 
   // If there's a ref parameter, redirect through the tracking API
   if (params.ref) {
-    redirect(`/api/referral/track?ref=${params.ref}`);
+    return <ReferralRedirect refCode={params.ref} />;
   }
 
   return <Home />;
