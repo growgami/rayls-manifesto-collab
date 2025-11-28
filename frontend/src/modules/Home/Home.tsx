@@ -85,69 +85,74 @@ export const Home = () => {
 
   return (
     <>
-      <div className="hidden md:block">
-        <SignatureStrip isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-      </div>
-
+      {/* Hero Section - Full viewport landing */}
       <div
-        className={`relative h-auto md:h-[200vh] flex bg-no-repeat bg-cover shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)] ${!isMobile ? 'md:bg-fixed' : ''}`}
+        className={`relative ${isMobile ? 'h-auto' : 'min-h-screen'} flex flex-col bg-no-repeat shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)] ${!isMobile ? 'md:bg-fixed' : ''}`}
         style={{
           backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.webp')`,
           backgroundPosition: isMobile ? 'center top' : 'center 35%',
-          backgroundSize: isMobile ? 'contain' : 'cover'
+          backgroundSize: 'cover'
         }}
       >
-        <main className="manifesto-article manifesto-article-top">
-          <header className="manifesto-header">
-            <Image
-              src="/images/Rayls_Logo_Gradient.webp"
-              alt="Description"
-              width={150}
-              height={56}
-            />
-          </header>
-          <h1>The Rayls Manifesto</h1>
+        {/* Fixed header at top */}
+        <header className="manifesto-header-fixed">
+          <Image
+            src="/images/Rayls_Logo_Gradient.webp"
+            alt="Rayls Logo"
+            width={150}
+            height={56}
+          />
+        </header>
+
+        {/* Centered content */}
+        <div className="manifesto-hero-content">
+          <h1 className="manifesto-hero-title">The Rayls Manifesto</h1>
           <button
             onClick={() => setIsModalOpen(true)}
             className="border-2 border-[var(--color-yellow)] text-[var(--color-yellow)] px-8 py-3 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity mb-8 bg-transparent"
           >
             Sign the Manifesto
           </button>
-          <h2 className="second-heading !text-[var(--color-white)]">
+          <h2 className="manifesto-hero-subtitle">
             The $100 Trillion Homecoming
           </h2>
-          <p className="font-bold">
-            A movement to rebuild global finance.
-          </p>
-          <p>
-            For decades, opportunity belonged to the privileged.
-          </p>
-          <p>
-            <span className="font-bold">Access wasn&apos;t earned; it was permitted.</span>
-          </p>
-          <p>
-            Then a single block in 2009 changed everything. When <span className="font-bold">the global economy cracked open, and entire communities lost their livelihoods, one quiet signal appeared</span>: a line of code carrying a newspaper headline about bailouts.
-          </p>
-          <p>
-            Not just Bitcoin, but <span className="font-bold">the belief that finance could be open, transparent, and built for everyone</span>.
-          </p>
-          <p>
-            From that moment, a movement began. Developers, thinkers, and dreamers came together to <span className="font-bold">build an open financial infrastructure</span>.
-          </p>
-          <p>
-            <span className="font-bold">Crypto wasn&apos;t born from rebellion.</span>
-          </p>
-          <p>
-            It was born from necessity, and sustained by hope:
-          </p>
-          <p>
-            <i>The hope that the next generation wouldn&apos;t need permission to participate.</i>
-          </p>
-          <p>
-            Today, that hope becomes reality.
-          </p>
-        </main>
+        </div>
       </div>
+
+      {/* Main Content */}
+      <main className="manifesto-article">
+        <p className="manifesto-tagline">
+          A movement to rebuild global finance.
+        </p>
+        <p>
+          For decades, opportunity belonged to the privileged.
+        </p>
+        <p>
+          <span className="font-bold">Access wasn&apos;t earned; it was permitted.</span>
+        </p>
+        <p>
+          Then a single block in 2009 changed everything. When <span className="font-bold">the global economy cracked open, and entire communities lost their livelihoods, one quiet signal appeared</span>: a line of code carrying a newspaper headline about bailouts.
+        </p>
+        <p>
+          Not just Bitcoin, but <span className="font-bold">the belief that finance could be open, transparent, and built for everyone</span>.
+        </p>
+        <p>
+          From that moment, a movement began. Developers, thinkers, and dreamers came together to <span className="font-bold">build an open financial infrastructure</span>.
+        </p>
+        <p>
+          <span className="font-bold">Crypto wasn&apos;t born from rebellion.</span>
+        </p>
+        <p>
+          It was born from necessity, and sustained by hope:
+        </p>
+        <p>
+          <i>The hope that the next generation wouldn&apos;t need permission to participate.</i>
+        </p>
+        <p>
+          Today, that hope becomes reality.
+        </p>
+      </main>
+
       <main className="manifesto-article" style={{ marginBottom: "0px" }}>
         <h2>When institutions began to listen</h2>
         <p>
@@ -349,8 +354,8 @@ export const Home = () => {
         </p>
       </main>
 
-      <div className="block md:hidden signature-strip-embedded">
-        <SignatureStrip isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      <div className="signature-strip-embedded flex justify-center">
+        <SignatureStrip setIsModalOpen={setIsModalOpen} />
       </div>
 
       {showScrollButton && !isModalOpen && (

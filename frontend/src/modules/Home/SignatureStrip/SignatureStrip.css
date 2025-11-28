@@ -1,25 +1,14 @@
 .signature-strip {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #111111d9;
+  background: #2a2a2a;
   padding: 16px;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
   border: 1px solid #ffffff26;
   box-shadow: 0 8px 32px #0006;
   width: 260px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10000;
-
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  backdrop-filter: blur(12px);
 }
 
 .signature-row {
@@ -45,7 +34,6 @@
 }
 
 .sig-btn {
-  margin-left: auto;
   background: white;
   color: black;
   border: none;
@@ -63,25 +51,11 @@
 .sig-sub {
   font-size: 11px;
   color: #b3b3b3;
+  text-align: center;
 }
 
-/* Mobile embedded version - override fixed positioning */
-.signature-strip-embedded .signature-strip {
-  position: static;
-  width: calc(100% - 32px);
-  margin: 0 16px 20px;
-  max-width: 400px;
-  background: #2a2a2a;
+/* Embedded container wrapper */
+.signature-strip-embedded {
+  padding: 20px 16px 40px;
 }
 
-@media (max-width: 300px) {
-  .signature-strip {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: calc(100vw - 50px);
-  }
-  .sig-sub {
-    text-align: center;
-  }
-}
