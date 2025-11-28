@@ -90,15 +90,24 @@ export const Home = () => {
   }
 
   return (
-    <>
+    <div
+      className={!isMobile ? 'relative min-h-screen' : ''}
+      style={!isMobile ? {
+        backgroundImage: `url('/images/background.webp')`,
+        backgroundPosition: 'center 35%',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+      } : undefined}
+    >
       {/* Hero Section - Full viewport landing */}
       <div
-        className={`relative ${isMobile ? 'h-auto' : 'min-h-screen'} flex flex-col bg-no-repeat shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)] ${!isMobile ? 'md:bg-fixed' : ''}`}
-        style={{
-          backgroundImage: `url('/images/${isMobile ? 'for-mobile' : 'background'}.webp')`,
-          backgroundPosition: isMobile ? 'center top' : 'center 35%',
+        className={`relative ${isMobile ? 'h-auto' : 'min-h-screen'} flex flex-col ${isMobile ? 'bg-no-repeat shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]' : ''}`}
+        style={isMobile ? {
+          backgroundImage: `url('/images/for-mobile.webp')`,
+          backgroundPosition: 'center top',
           backgroundSize: 'cover'
-        }}
+        } : undefined}
       >
         {/* Fixed header at top with parallax */}
         <header
@@ -400,6 +409,6 @@ export const Home = () => {
       )}
 
       <SignatureModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-    </>
+    </div>
   );
 };

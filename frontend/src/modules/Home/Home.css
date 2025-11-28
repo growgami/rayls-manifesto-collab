@@ -88,8 +88,12 @@
 .manifesto-article {
   max-width: 900px;
   font-family: var(--font-sans);
-  color: #f4f6fff5;
-  text-shadow: 0 12px 36px #0c042066;
+  color: #fff;
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.9),
+    0 0 16px rgba(0, 0, 0, 0.8),
+    0 0 32px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.9);
   margin: 3em auto;
   padding-bottom: 5em;
   line-height: 1.8;
@@ -122,7 +126,10 @@
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
   color: var(--color-purple);
-  text-shadow: 0 8px 24px #10083066;
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.9),
+    0 0 16px rgba(0, 0, 0, 0.7),
+    0 0 32px rgba(0, 0, 0, 0.5);
   margin-top: 2em;
   margin-bottom: 0.75em;
   font-size: 1.75rem;
