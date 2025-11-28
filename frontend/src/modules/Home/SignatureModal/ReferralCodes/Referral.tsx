@@ -11,7 +11,7 @@ interface ReferralProps {
 export const Referral = ({ referralCode }: ReferralProps) => {
   const [copied, setCopied] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_NEXTAUTH_URL;
   const referralUrl = `${baseUrl}/?ref=${referralCode}`;
 
   const handleCopy = async () => {
