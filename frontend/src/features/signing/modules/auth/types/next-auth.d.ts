@@ -26,6 +26,8 @@ declare module "next-auth" {
         isKOL: boolean;
       };
       position?: number;
+      /** True if user doesn't have minimum followers to sign */
+      insufficientFollowers?: boolean;
     };
   }
 
@@ -67,5 +69,6 @@ declare module "next-auth/jwt" {
       isKOL: boolean;
     } | null;
     position?: number;
+    insufficientFollowers?: boolean;
   }
 }

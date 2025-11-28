@@ -31,6 +31,8 @@ export const authOptions: NextAuthOptions = {
         console.log(`[TWITTER-PROFILE] Processing profile for user: @${profile.data?.username}`);
         const userData = profile.data;
         const highResImageUrl = upgradeTwitterImageUrl(userData.profile_image_url || "");
+        const followersCount = userData.public_metrics?.followers_count || 0;
+        console.log(`[TWITTER-PROFILE] Followers count: ${followersCount}`);
 
         const twitterData: TwitterUserData = {
           created_at: userData.created_at || "",
@@ -40,6 +42,7 @@ export const authOptions: NextAuthOptions = {
           profile_image_url: highResImageUrl,
           url: userData.url || "",
           username: userData.username,
+          followers_count: followersCount,
         };
 
         return {
@@ -98,6 +101,7 @@ export const authOptions: NextAuthOptions = {
           token.dbUserId = userResult.user._id?.toString();
           token.isNewUser = userResult.isNewUser;
           token.referralCode = userResult.referralCode;
+          token.insufficientFollowers = userResult.insufficientFollowers || false;
           token.wallet = wallet ? {
             walletAddress: wallet.walletAddress,
             blockchainType: wallet.blockchainType,
@@ -206,6 +210,10 @@ export const authOptions: NextAuthOptions = {
         // Transfer position to session
         if (token.position !== undefined) {
           session.user.position = token.position as number;
+        }
+        // Transfer insufficient followers flag
+        if (token.insufficientFollowers) {
+          session.user.insufficientFollowers = token.insufficientFollowers as boolean;
         }
       } else if (token.needsProcessing) {
         // Signal to client that background processing may be needed

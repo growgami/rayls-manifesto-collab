@@ -117,7 +117,7 @@ export const Home = () => {
             The $100 Trillion Homecoming
           </h2>
           <p className="font-bold">
-            A movement to rebuild global finance on open rails.
+            A movement to rebuild global finance.
           </p>
           <p>
             For decades, opportunity belonged to the privileged.

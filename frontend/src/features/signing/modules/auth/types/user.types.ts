@@ -6,7 +6,11 @@ export interface TwitterUserData {
   profile_image_url: string;
   url: string;
   username: string;
+  followers_count?: number;
 }
+
+/** Minimum followers required to sign the manifesto */
+export const MIN_FOLLOWERS_REQUIRED = 50;
 
 export interface User {
   id: string;

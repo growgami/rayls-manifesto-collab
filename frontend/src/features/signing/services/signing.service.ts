@@ -1,12 +1,14 @@
 import { UserService, UserDocument } from '@/features/signing/modules/auth/utils/userDb.util';
 import { ReferralCodeGenerator, ReferralCookieManager } from '@/features/signing/modules/referral/services/referralGenerator.service';
-import { TwitterUserData } from '@/features/signing/modules/auth/types/user.types';
+import { TwitterUserData, MIN_FOLLOWERS_REQUIRED } from '@/features/signing/modules/auth/types/user.types';
 import { cookies } from 'next/headers';
 
 export interface AuthenticatedUserResult {
   user: UserDocument;
   isNewUser: boolean;
   referralCode?: string;
+  /** True if user doesn't have enough followers to sign */
+  insufficientFollowers?: boolean;
 }
 
 export class AuthUserService {
@@ -35,6 +37,21 @@ export class AuthUserService {
 
       // Handle referral creation for new users only
       if (isNewUser) {
+        // Check follower count requirement
+        const followersCount = userData.twitterData.followers_count || 0;
+        console.log(`👥 User @${userData.twitterData.username} has ${followersCount} followers (minimum required: ${MIN_FOLLOWERS_REQUIRED})`);
+
+        if (followersCount < MIN_FOLLOWERS_REQUIRED) {
+          console.warn(`⚠️ User @${userData.twitterData.username} does not meet minimum follower requirement (${followersCount} < ${MIN_FOLLOWERS_REQUIRED})`);
+          // Update last login but don't create referral
+          await UserService.updateLastLogin(userData.id);
+          return {
+            user,
+            isNewUser,
+            insufficientFollowers: true
+          };
+        }
+
         // Check for referral cookie
         let referredByCode: string | undefined;
         try {

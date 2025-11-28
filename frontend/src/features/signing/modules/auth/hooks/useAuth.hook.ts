@@ -1,5 +1,5 @@
 import { useSession, signIn, signOut } from "next-auth/react";
-import { AuthSession, TwitterUserData } from "@/features/signing/modules/auth/types/user.types";
+import { AuthSession, TwitterUserData, MIN_FOLLOWERS_REQUIRED } from "@/features/signing/modules/auth/types/user.types";
 
 export const useAuth = () => {
   const { data: session, status } = useSession();
@@ -9,6 +9,7 @@ export const useAuth = () => {
   const user = session?.user;
   const twitterData = session?.user?.twitterData as TwitterUserData | undefined;
   const referralCode = session?.user?.referralCode;
+  const insufficientFollowers = session?.user?.insufficientFollowers || false;
 
   const handleSignIn = () => signIn("twitter");
   const handleSignOut = () => signOut();
@@ -20,6 +21,8 @@ export const useAuth = () => {
     referralCode,
     isLoading,
     isAuthenticated,
+    insufficientFollowers,
+    minFollowersRequired: MIN_FOLLOWERS_REQUIRED,
     signIn: handleSignIn,
     signOut: handleSignOut,
   };
