@@ -8,6 +8,10 @@ interface ReferralRedirectProps {
 
 export function ReferralRedirect({ refCode }: ReferralRedirectProps) {
   useEffect(() => {
+    console.log('[REFERRAL-REDIRECT] Current origin:', window.location.origin);
+    console.log('[REFERRAL-REDIRECT] Ref code:', refCode);
+    console.log('[REFERRAL-REDIRECT] Redirecting to:', `/api/referral/track?ref=${refCode}`);
+
     // Client-side redirect uses the browser's current origin
     window.location.href = `/api/referral/track?ref=${refCode}`;
   }, [refCode]);
