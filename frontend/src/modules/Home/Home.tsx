@@ -14,6 +14,7 @@ export const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   // Silent tracking - monitors user activity without displaying data
   useTracking();
@@ -48,7 +49,7 @@ export const Home = () => {
     });
   };
 
-  // Handle scroll button visibility based on scroll position
+  // Handle scroll for button visibility and parallax effect
   useEffect(() => {
     const handleScroll = () => {
       const scrollHeight = document.documentElement.scrollHeight;
@@ -58,13 +59,18 @@ export const Home = () => {
       // Hide button when near bottom (within 100px)
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
       setShowScrollButton(!isNearBottom);
+
+      // Track scroll for parallax (desktop only)
+      if (!isMobile) {
+        setScrollY(scrollTop);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Check initial position
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
 
   // Show loading state while assets are loading
   if (isAssetsLoading) {
@@ -94,8 +100,14 @@ export const Home = () => {
           backgroundSize: 'cover'
         }}
       >
-        {/* Fixed header at top */}
-        <header className="manifesto-header-fixed">
+        {/* Fixed header at top with parallax */}
+        <header
+          className="manifesto-header-fixed"
+          style={!isMobile ? {
+            transform: `translateY(${scrollY * 0.15}px)`,
+            opacity: Math.max(0, 1 - scrollY / 500),
+          } : undefined}
+        >
           <Image
             src="/images/Rayls_Logo_Gradient.webp"
             alt="Rayls Logo"
@@ -104,8 +116,14 @@ export const Home = () => {
           />
         </header>
 
-        {/* Centered content */}
-        <div className="manifesto-hero-content">
+        {/* Centered content with parallax */}
+        <div
+          className="manifesto-hero-content"
+          style={!isMobile ? {
+            transform: `translateY(${scrollY * 0.3}px)`,
+            opacity: Math.max(0, 1 - scrollY / 600),
+          } : undefined}
+        >
           <h1 className="manifesto-hero-title">The Rayls Manifesto</h1>
           <button
             onClick={() => setIsModalOpen(true)}
