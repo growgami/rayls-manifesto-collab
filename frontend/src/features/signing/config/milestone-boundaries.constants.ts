@@ -1,74 +1,53 @@
 /**
- * Milestone Boundary Configuration
+ * Position Skip Range Configuration
  *
- * Single source of truth for all milestone boundaries and gaps.
- * Used by both the position counter system and the UI milestone display.
+ * Defines ranges of positions that should be skipped (reserved) during
+ * automatic position assignment. These positions can only be assigned manually.
  *
- * Structure:
- * - max: Last position in this milestone
- * - gapStart: First reserved position (never assigned)
- * - gapEnd: Last reserved position (never assigned)
- * - nextStart: First position of next milestone
+ * Tier structure:
+ * - Mythical: 1-300 (manually assigned, counter starts after this)
+ * - Legendary: 301-5,000 (501-701 held back)
+ * - Epic: 5,001-20,000 (19,800-20,000 saved)
+ * - Rare: 20,001-50,000 (49,800-50,000 saved)
+ * - Common: 50,001+
  */
 
-export interface MilestoneBoundary {
-  max: number;
-  gapStart: number;
-  gapEnd: number;
-  nextStart: number;
+export interface SkipRange {
+  /** First position to skip (inclusive) */
+  start: number;
+  /** Last position to skip (inclusive) */
+  end: number;
+  /** Position to jump to after this range */
+  jumpTo: number;
 }
 
 /**
- * Milestone boundaries with reserved gaps between them.
- * Positions 1-500 are reserved and never assigned.
- * Regular positions start at 501.
+ * Reserved position ranges that are skipped during auto-generation.
+ * When the counter reaches the start of a skip range, it jumps to jumpTo.
  */
-export const MILESTONE_BOUNDARIES: MilestoneBoundary[] = [
+export const SKIP_RANGES: SkipRange[] = [
+  // Legendary tier: hold back 501-701
   {
-    max: 4800,
-    gapStart: 4801,
-    gapEnd: 5000,
-    nextStart: 5001,
+    start: 501,
+    end: 701,
+    jumpTo: 702,
   },
+  // Epic tier: save last 201 positions (19,800-20,000)
   {
-    max: 19800,
-    gapStart: 19801,
-    gapEnd: 20000,
-    nextStart: 20001,
+    start: 19800,
+    end: 20000,
+    jumpTo: 20001,
   },
+  // Rare tier: save last 201 positions (49,800-50,000)
   {
-    max: 49800,
-    gapStart: 49801,
-    gapEnd: 50000,
-    nextStart: 50001,
+    start: 49800,
+    end: 50000,
+    jumpTo: 50001,
   },
 ];
 
 /**
- * Helper function to get milestone ranges for UI display
- * Converts boundary data into min/max ranges
- * Positions 1-500 are reserved, so ranges start from 501
+ * Starting position for the auto-counter.
+ * First auto-assigned user gets position 301 (after Mythical range 1-300).
  */
-export function getMilestoneRanges() {
-  const ranges = [
-    {
-      min: 501,
-      max: MILESTONE_BOUNDARIES[0].max,
-    },
-  ];
-
-  for (let i = 0; i < MILESTONE_BOUNDARIES.length - 1; i++) {
-    ranges.push({
-      min: MILESTONE_BOUNDARIES[i].nextStart,
-      max: MILESTONE_BOUNDARIES[i + 1].max,
-    });
-  }
-
-  // Last milestone (no upper limit)
-  ranges.push({
-    min: MILESTONE_BOUNDARIES[MILESTONE_BOUNDARIES.length - 1].nextStart,
-    max: Infinity,
-  });
-
-  return ranges;
-}
+export const COUNTER_START_POSITION = 300;

@@ -1,30 +1,29 @@
 import { getDatabase } from '@/shared/lib/mongodb.lib';
 import { CounterModel } from '@/features/signing/modules/referral/models/counter.model';
-import { MILESTONE_BOUNDARIES } from '@/features/signing/config/milestone-boundaries.constants';
+import { SKIP_RANGES, COUNTER_START_POSITION } from '@/features/signing/config/milestone-boundaries.constants';
 
 export class PositionCounterService {
   private static readonly COUNTER_ID = 'position';
-  private static readonly INITIAL_POSITION = 500; // First user gets position 501
 
   /**
-   * Checks if position is at a milestone boundary and returns next valid position
-   * @param position The current position to check
-   * @returns The next valid position (same if not at boundary, or skipped to next milestone)
+   * Checks if a position falls within a skip range and returns the jump destination.
+   * @param position The position to check
+   * @returns The valid position (same if not in skip range, or jumpTo if in range)
    */
-  private static getNextValidPosition(position: number): number {
-    for (const boundary of MILESTONE_BOUNDARIES) {
-      if (position === boundary.max) {
-        console.log(`Position ${position} hit milestone boundary. Skipping to ${boundary.nextStart}`);
-        return boundary.nextStart;
+  private static getValidPosition(position: number): number {
+    for (const range of SKIP_RANGES) {
+      if (position >= range.start && position <= range.end) {
+        console.log(`Position ${position} is in reserved range ${range.start}-${range.end}. Jumping to ${range.jumpTo}`);
+        return range.jumpTo;
       }
     }
     return position;
   }
 
   /**
-   * Gets the next position atomically (positions 501+)
-   * Auto-initializes counter starting at 500 if it doesn't exist
-   * Automatically skips reserved gaps between milestones
+   * Gets the next position atomically (positions 301+)
+   * Auto-initializes counter starting at 300 if it doesn't exist
+   * Automatically skips reserved ranges (501-701, 19800-20000, 49800-50000)
    * @returns The next position number
    */
   static async getNextPosition(): Promise<number> {
@@ -34,20 +33,20 @@ export class PositionCounterService {
     // Check if counter exists
     const currentValue = await counterModel.getCurrentValue(this.COUNTER_ID);
 
-    if (currentValue === null || currentValue < this.INITIAL_POSITION) {
+    if (currentValue === null || currentValue < COUNTER_START_POSITION) {
       // Counter doesn't exist or is below initial position, initialize
-      console.log('Position counter not initialized, initializing at 500...');
+      console.log(`Position counter not initialized, initializing at ${COUNTER_START_POSITION}...`);
       await this.initializeCounter();
     }
 
     // Get next position atomically
     let nextPosition = await counterModel.getNextSequence(this.COUNTER_ID);
 
-    // Check if we hit a milestone boundary and need to skip gap
-    const validPosition = this.getNextValidPosition(nextPosition);
+    // Check if we're in a skip range and need to jump
+    const validPosition = this.getValidPosition(nextPosition);
 
     if (validPosition !== nextPosition) {
-      // We hit a boundary, update counter to the new milestone start - 1
+      // We're in a skip range, update counter to the jump destination - 1
       // (because next call will increment it)
       await counterModel.initializeCounter(this.COUNTER_ID, validPosition - 1);
       nextPosition = validPosition;
@@ -58,19 +57,19 @@ export class PositionCounterService {
 
   /**
    * Initializes the position counter
-   * Starts from 500 (first user will get position 501)
+   * Starts from 300 (first user will get position 301)
    */
   static async initializeCounter(): Promise<void> {
     const db = await getDatabase();
     const counterModel = new CounterModel(db);
 
-    console.log('Initializing position counter at 500');
-    await counterModel.initializeCounter(this.COUNTER_ID, this.INITIAL_POSITION);
+    console.log(`Initializing position counter at ${COUNTER_START_POSITION}`);
+    await counterModel.initializeCounter(this.COUNTER_ID, COUNTER_START_POSITION);
   }
 
   /**
    * Initializes counter from existing referral data
-   * Finds the maximum position >= 501 in the referrals collection
+   * Finds the maximum position >= 301 in the referrals collection
    * This ensures new positions continue from where existing data left off
    * Used for migration scenarios
    */
@@ -78,14 +77,14 @@ export class PositionCounterService {
     const db = await getDatabase();
     const referralsCollection = db.collection('referrals');
 
-    // Find the highest position >= 501 (ignore reserved range 1-500)
+    // Find the highest position >= 301 (ignore Mythical range 1-300)
     const maxPositionDoc = await referralsCollection
-      .find({ position: { $gte: 501 } })
+      .find({ position: { $gte: COUNTER_START_POSITION + 1 } })
       .sort({ position: -1 })
       .limit(1)
       .toArray();
 
-    const maxPosition = maxPositionDoc[0]?.position || this.INITIAL_POSITION;
+    const maxPosition = maxPositionDoc[0]?.position || COUNTER_START_POSITION;
 
     console.log(`Initializing position counter with max position: ${maxPosition}`);
 

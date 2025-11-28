@@ -1,25 +1,22 @@
 import { IMilestone } from "@/modules/Home/SignatureModal/SignatureCard/types/milestone.types";
-import { getMilestoneRanges } from "@/features/signing/config/milestone-boundaries.constants";
-
-/**
- * Get milestone ranges from shared configuration
- * This ensures UI boundaries stay in sync with position counter logic
- */
-const MILESTONE_RANGES = getMilestoneRanges();
 
 /**
  * Milestone Configuration Array
  *
  * Defines content and styling for each signature number range.
- * Ranges are derived from the shared milestone boundary configuration.
- * Positions 1-500 are reserved, so first displayed milestone starts at 501.
+ *
+ * Tier order (rarest to most common):
+ * - Mythical: 1-300 (OG/Special members)
+ * - Legendary: 301-5,000 (positions 501-701 held back for special allocation)
+ * - Epic: 5,001-20,000 (last 200 positions 19,800-20,000 saved)
+ * - Rare: 20,001-50,000 (last 200 positions 49,800-50,000 saved)
+ * - Common: 50,001+ (scale phase)
  */
 export const MILESTONES: IMilestone[] = [
-  // Milestone 1: Early Pioneers (501-4800)
-  // Gap: 4801-5000 reserved, never assigned
+  // Tier 1: Mythical (1-300) - RAREST TIER - OG/Special members
   {
-    min: MILESTONE_RANGES[0].min,
-    max: MILESTONE_RANGES[0].max,
+    min: 1,
+    max: 300,
     content: {},
     badgeGradient: {
       startColor: "#b49aff",
@@ -27,15 +24,15 @@ export const MILESTONES: IMilestone[] = [
       angle: 135,
     },
     cardStyling: {
-      backgroundImage: "/images/cards/legendary-card.webp",
+      backgroundImage: "/images/cards/mythical-card.webp",
     },
   },
 
-  // Milestone 2: Momentum Builders (5001-19800)
-  // Gap: 19801-20000 reserved, never assigned
+  // Tier 2: Legendary (301-5,000)
+  // Note: Positions 501-701 held back for special allocation
   {
-    min: MILESTONE_RANGES[1].min,
-    max: MILESTONE_RANGES[1].max,
+    min: 301,
+    max: 5000,
     content: {},
     badgeGradient: {
       startColor: "#ff6b6b",
@@ -43,15 +40,15 @@ export const MILESTONES: IMilestone[] = [
       angle: 135,
     },
     cardStyling: {
-      backgroundImage: "/images/cards/epic-card.webp",
+      backgroundImage: "/images/cards/legendary-card.webp",
     },
   },
 
-  // Milestone 3: Network Amplifiers (20001-49800)
-  // Gap: 49801-50000 reserved, never assigned
+  // Tier 3: Epic (5,001-20,000)
+  // Note: Last 200 positions (19,800-20,000) saved for special allocation
   {
-    min: MILESTONE_RANGES[2].min,
-    max: MILESTONE_RANGES[2].max,
+    min: 5001,
+    max: 20000,
     content: {},
     badgeGradient: {
       startColor: "#4ecdc4",
@@ -59,19 +56,34 @@ export const MILESTONES: IMilestone[] = [
       angle: 135,
     },
     cardStyling: {
-      backgroundImage: "/images/cards/rare-card.webp",
+      backgroundImage: "/images/cards/epic-card.webp",
     },
   },
 
-  // Milestone 4: Movement Leaders (50001+)
-  // No upper limit
+  // Tier 4: Rare (20,001-50,000)
+  // Note: Last 200 positions (49,800-50,000) saved for special allocation
   {
-    min: MILESTONE_RANGES[3].min,
-    max: MILESTONE_RANGES[3].max,
+    min: 20001,
+    max: 50000,
     content: {},
     badgeGradient: {
       startColor: "#a770ef",
       endColor: "#cf8bf3",
+      angle: 135,
+    },
+    cardStyling: {
+      backgroundImage: "/images/cards/rare-card.webp",
+    },
+  },
+
+  // Tier 5: Common (50,001+)
+  {
+    min: 50001,
+    max: Infinity,
+    content: {},
+    badgeGradient: {
+      startColor: "#6b7280",
+      endColor: "#9ca3af",
       angle: 135,
     },
     cardStyling: {
@@ -81,19 +93,23 @@ export const MILESTONES: IMilestone[] = [
 ];
 
 /**
- * Default Milestone
+ * Default Milestone (Common tier)
  *
  * Used as fallback for signature numbers outside configured ranges
- * or when milestone lookup fails.
+ * (e.g., invalid positions like 0 or negative numbers) or when
+ * milestone lookup fails.
  */
 export const DEFAULT_MILESTONE: IMilestone = {
   min: 0,
   max: Infinity,
   content: {},
   badgeGradient: {
-    startColor: "#b49aff",
-    endColor: "#ecfb3e",
+    startColor: "#6b7280",
+    endColor: "#9ca3af",
     angle: 135,
+  },
+  cardStyling: {
+    backgroundImage: "/images/cards/common-card.webp",
   },
 };
 
