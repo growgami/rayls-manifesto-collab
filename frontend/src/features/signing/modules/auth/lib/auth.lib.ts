@@ -279,6 +279,69 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // Retry referral creation on subsequent requests if it failed initially
+      else if (token.needsReferralCreation && token.tempUserData && !token.insufficientFollowers) {
+        try {
+          const xId = token.tempUserData.id;
+          console.log(`🔄 [JWT-RETRY] Attempting deferred referral creation for xId: ${xId}`);
+
+          // Check if referral was created by another request
+          const db = await getDatabase();
+          const referralModel = new ReferralModel(db);
+          let referral = await referralModel.findByXId(xId);
+
+          if (referral) {
+            console.log(`✅ [JWT-RETRY] Referral found (created by another process): ${referral.referralCode}`);
+            // Update token with existing referral data
+            token.referralData = {
+              referralCode: referral.referralCode,
+              position: referral.position,
+              referralCount: referral.referralCount,
+              linkVisits: referral.linkVisits,
+              isKOL: referral.isKOL
+            };
+            token.position = referral.position;
+            token.referralCode = referral.referralCode;
+            token.needsReferralCreation = false;
+            delete token.tempUserData;
+          } else {
+            // Referral doesn't exist - try creating it with longer timeout
+            const referralCode = await Promise.race([
+              AuthUserService.createUserReferral(token.tempUserData),
+              new Promise<null>((resolve) => setTimeout(() => {
+                console.warn(`⏱️ [JWT-RETRY] Deferred referral creation timeout for xId: ${xId}`);
+                resolve(null);
+              }, 8000))
+            ]);
+
+            if (referralCode) {
+              console.log(`✅ [JWT-RETRY] Referral created: ${referralCode}`);
+              // Fetch the newly created referral
+              referral = await referralModel.findByXId(xId);
+              if (referral) {
+                token.referralData = {
+                  referralCode: referral.referralCode,
+                  position: referral.position,
+                  referralCount: referral.referralCount,
+                  linkVisits: referral.linkVisits,
+                  isKOL: referral.isKOL
+                };
+                token.position = referral.position;
+                token.referralCode = referral.referralCode;
+                token.needsReferralCreation = false;
+                delete token.tempUserData;
+              }
+            } else {
+              console.error(`❌ [JWT-RETRY] Referral creation still timing out for xId: ${xId} - will retry on next request`);
+              // Keep needsReferralCreation true to retry on next request
+            }
+          }
+        } catch (error) {
+          console.error('[JWT-RETRY] Error during deferred referral creation:', error);
+          // Keep needsReferralCreation true to retry on next request
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -298,57 +361,11 @@ export const authOptions: NextAuthOptions = {
         } as TwitterUserData;
       }
 
-      // CRITICAL: Ensure referral exists before returning session (BLOCKING)
-      // This prevents users from ever seeing position #0
-      if (token.needsReferralCreation && token.tempUserData && token.twitterData) {
-        const xId = token.twitterData.id;
-        try {
-          const db = await getDatabase();
-          const referralModel = new ReferralModel(db);
-
-          // Check if referral exists
-          let referral = await referralModel.findByXId(xId);
-
-          // If no referral exists and user should have one, create it NOW (BLOCKING)
-          if (!referral && !token.insufficientFollowers) {
-            console.log(`🔧 [SESSION-BLOCKING] Referral missing for xId: ${xId} - creating now...`);
-
-            // Create referral with extended timeout (15 seconds)
-            const referralCode = await Promise.race([
-              AuthUserService.createUserReferral(token.tempUserData),
-              new Promise<null>((resolve) => setTimeout(() => {
-                console.error(`❌ [SESSION-BLOCKING] Referral creation timeout for xId: ${xId}`);
-                resolve(null);
-              }, 15000))
-            ]);
-
-            if (referralCode) {
-              console.log(`✅ [SESSION-BLOCKING] Referral created: ${referralCode}`);
-              // Fetch the newly created referral
-              referral = await referralModel.findByXId(xId);
-            } else {
-              console.error(`❌ [SESSION-BLOCKING] Failed to create referral for xId: ${xId}`);
-            }
-          }
-
-          // Update token with referral data
-          if (referral) {
-            token.referralData = {
-              referralCode: referral.referralCode,
-              position: referral.position,
-              referralCount: referral.referralCount,
-              linkVisits: referral.linkVisits,
-              isKOL: referral.isKOL
-            };
-            token.position = referral.position;
-            token.referralCode = referral.referralCode;
-            token.needsReferralCreation = false;
-            // Clear temp data once referral is confirmed
-            delete token.tempUserData;
-          }
-        } catch (error) {
-          console.error('[SESSION-BLOCKING] Error ensuring referral exists:', error);
-        }
+      // Session callback runs after JWT callback - no token modifications here
+      // All retry logic is handled in the JWT callback above
+      if (token.needsReferralCreation) {
+        // Log warning but don't block - JWT callback will retry on next request
+        console.warn(`⚠️ [SESSION] User still needs referral creation - will retry on next request`);
       }
 
       // Transfer processed data to session
