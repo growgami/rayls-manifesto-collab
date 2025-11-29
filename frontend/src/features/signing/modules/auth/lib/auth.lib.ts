@@ -73,50 +73,74 @@ export const authOptions: NextAuthOptions = {
 
           const xId = userData.twitterData.id;
 
-          // Fetch user + wallet + referral data in parallel during OAuth
-          // Add timeout protection to prevent OAuth callback delays
+          // FAST PATH: Create user only (no referral) - completes OAuth quickly
           const [userResult, db] = await Promise.race([
             Promise.all([
-              AuthUserService.processAuthenticatedUser(userData),
+              AuthUserService.createUserOnly(userData),
               getDatabase()
             ]),
             new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Database operation timeout')), 4000)
+              setTimeout(() => reject(new Error('User creation timeout')), 3000)
             )
           ]);
 
-          // Fetch wallet and referral data with timeout
-          const [wallet, referral] = await Promise.race([
-            Promise.all([
-              new WalletModel(db).findByXId(xId),
-              new ReferralModel(db).findByXId(xId)
-            ]),
-            new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Additional data fetch timeout')), 2000)
-            )
-          ]);
-
-          // Store successful results
+          // Store user data immediately
           token.twitterData = userData.twitterData;
           token.dbUserId = userResult.user._id?.toString();
           token.isNewUser = userResult.isNewUser;
-          token.referralCode = userResult.referralCode;
           token.insufficientFollowers = userResult.insufficientFollowers || false;
+
+          // Fetch wallet data quickly
+          const wallet = await Promise.race([
+            new WalletModel(db).findByXId(xId),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+          ]);
+
           token.wallet = wallet ? {
             walletAddress: wallet.walletAddress,
             blockchainType: wallet.blockchainType,
             createdAt: wallet.createdAt
           } : null;
-          token.referralData = referral ? {
-            referralCode: referral.referralCode,
-            position: referral.position,
-            referralCount: referral.referralCount,
-            linkVisits: referral.linkVisits,
-            isKOL: referral.isKOL
-          } : null;
-          token.position = referral?.position;
+
+          // NON-BLOCKING: Start referral creation in background if needed
+          if (userResult.needsReferralCreation && !userResult.insufficientFollowers) {
+            console.log(`🔄 Starting background referral creation for @${userData.twitterData.username}`);
+            token.needsReferralCreation = true;
+            token.tempUserData = userData;
+
+            // Fire and forget - create referral async (with longer timeout)
+            AuthUserService.createUserReferral(userData)
+              .then(async (referralCode) => {
+                if (referralCode) {
+                  console.log(`✅ Background referral created: ${referralCode}`);
+                } else {
+                  console.error(`❌ Background referral creation failed - will retry on next session`);
+                }
+              })
+              .catch((error) => {
+                console.error('❌ Background referral creation error:', error);
+              });
+          } else {
+            // Existing user or insufficient followers - fetch referral data
+            const referral = await Promise.race([
+              new ReferralModel(db).findByXId(xId),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+            ]);
+
+            token.referralData = referral ? {
+              referralCode: referral.referralCode,
+              position: referral.position,
+              referralCount: referral.referralCount,
+              linkVisits: referral.linkVisits,
+              isKOL: referral.isKOL
+            } : null;
+            token.position = referral?.position;
+            token.referralCode = referral?.referralCode;
+          }
+
           token.processingComplete = true;
           token.needsProcessing = false;
+
         } catch (error) {
           console.error('Failed to process authenticated user during OAuth:', error);
 
@@ -135,24 +159,89 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Subsequent requests: retry deferred processing if needed
+      // Subsequent requests: repair missing referrals if needed
+      else if (token.needsReferralCreation && token.tempUserData) {
+        try {
+          const xId = token.tempUserData.twitterData.id;
+          const db = await getDatabase();
+          const referralModel = new ReferralModel(db);
+
+          // Check if referral was created (might have completed in background)
+          const existingReferral = await referralModel.findByXId(xId);
+
+          if (existingReferral) {
+            console.log(`✅ Referral found during repair check: ${existingReferral.referralCode}`);
+            // Referral exists - update token
+            token.referralData = {
+              referralCode: existingReferral.referralCode,
+              position: existingReferral.position,
+              referralCount: existingReferral.referralCount,
+              linkVisits: existingReferral.linkVisits,
+              isKOL: existingReferral.isKOL
+            };
+            token.position = existingReferral.position;
+            token.referralCode = existingReferral.referralCode;
+            token.needsReferralCreation = false;
+            delete token.tempUserData;
+          } else {
+            console.log(`🔧 Attempting to repair missing referral for xId: ${xId}`);
+            // Referral still missing - try to create it now
+            const referralCode = await Promise.race([
+              AuthUserService.createUserReferral(token.tempUserData),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
+            ]);
+
+            if (referralCode) {
+              console.log(`✅ Referral repaired successfully: ${referralCode}`);
+              // Fetch the newly created referral
+              const newReferral = await referralModel.findByXId(xId);
+              if (newReferral) {
+                token.referralData = {
+                  referralCode: newReferral.referralCode,
+                  position: newReferral.position,
+                  referralCount: newReferral.referralCount,
+                  linkVisits: newReferral.linkVisits,
+                  isKOL: newReferral.isKOL
+                };
+                token.position = newReferral.position;
+                token.referralCode = newReferral.referralCode;
+                token.needsReferralCreation = false;
+                delete token.tempUserData;
+              }
+            } else {
+              console.error(`❌ Referral repair failed - will retry on next session`);
+              // Keep needsReferralCreation true to retry again
+            }
+          }
+        } catch (error) {
+          console.error('Failed referral repair:', error);
+          // Keep needsReferralCreation true to retry on next request
+        }
+      }
+
+      // Deferred user creation processing (fallback from old flow)
       else if (token.needsProcessing && token.tempUserData && !token.processingComplete) {
         try {
           const result = await Promise.race([
-            AuthUserService.processAuthenticatedUser(token.tempUserData),
+            AuthUserService.createUserOnly(token.tempUserData),
             new Promise<never>((_, reject) =>
               setTimeout(() => reject(new Error('Deferred processing timeout')), 2000)
             )
           ]);
 
-          // Update token - these changes WILL persist from jwt callback
+          // Update token
           token.dbUserId = result.user._id?.toString();
           token.isNewUser = result.isNewUser;
-          token.referralCode = result.referralCode;
           token.needsProcessing = false;
           token.processingComplete = true;
-          delete token.tempUserData;
-          delete token.tempUserId;
+
+          // If new user, mark for referral creation
+          if (result.needsReferralCreation) {
+            token.needsReferralCreation = true;
+          } else {
+            delete token.tempUserData;
+            delete token.tempUserId;
+          }
         } catch (error) {
           console.error('Failed deferred user processing:', error);
           // Keep needsProcessing true to retry on next request
