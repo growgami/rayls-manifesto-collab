@@ -267,8 +267,61 @@ export const authOptions: NextAuthOptions = {
         } as TwitterUserData;
       }
 
+      // CRITICAL: Ensure referral exists before returning session (BLOCKING)
+      // This prevents users from ever seeing position #0
+      if (token.needsReferralCreation && token.tempUserData && token.twitterData) {
+        const xId = token.twitterData.id;
+        try {
+          const db = await getDatabase();
+          const referralModel = new ReferralModel(db);
+
+          // Check if referral exists
+          let referral = await referralModel.findByXId(xId);
+
+          // If no referral exists and user should have one, create it NOW (BLOCKING)
+          if (!referral && !token.insufficientFollowers) {
+            console.log(`🔧 [SESSION-BLOCKING] Referral missing for xId: ${xId} - creating now...`);
+
+            // Create referral with extended timeout (15 seconds)
+            const referralCode = await Promise.race([
+              AuthUserService.createUserReferral(token.tempUserData),
+              new Promise<null>((resolve) => setTimeout(() => {
+                console.error(`❌ [SESSION-BLOCKING] Referral creation timeout for xId: ${xId}`);
+                resolve(null);
+              }, 15000))
+            ]);
+
+            if (referralCode) {
+              console.log(`✅ [SESSION-BLOCKING] Referral created: ${referralCode}`);
+              // Fetch the newly created referral
+              referral = await referralModel.findByXId(xId);
+            } else {
+              console.error(`❌ [SESSION-BLOCKING] Failed to create referral for xId: ${xId}`);
+            }
+          }
+
+          // Update token with referral data
+          if (referral) {
+            token.referralData = {
+              referralCode: referral.referralCode,
+              position: referral.position,
+              referralCount: referral.referralCount,
+              linkVisits: referral.linkVisits,
+              isKOL: referral.isKOL
+            };
+            token.position = referral.position;
+            token.referralCode = referral.referralCode;
+            token.needsReferralCreation = false;
+            // Clear temp data once referral is confirmed
+            delete token.tempUserData;
+          }
+        } catch (error) {
+          console.error('[SESSION-BLOCKING] Error ensuring referral exists:', error);
+        }
+      }
+
       // Transfer processed data to session
-      if (token.processingComplete) {
+      if (token.processingComplete || token.dbUserId) {
         if (token.dbUserId) {
           session.user.dbUserId = token.dbUserId as string;
         }
