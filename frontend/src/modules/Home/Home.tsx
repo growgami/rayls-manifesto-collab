@@ -102,7 +102,7 @@ export const Home = () => {
     >
       {/* Hero Section - Full viewport landing */}
       <div
-        className={`relative ${isMobile ? 'h-auto' : 'min-h-screen'} flex flex-col ${isMobile ? 'bg-no-repeat shadow-[inset_0_-50px_50px_-30px_rgba(0,0,0,0.7)]' : ''}`}
+        className={`relative min-h-screen flex flex-col ${isMobile ? 'bg-no-repeat shadow-[inset_0_-100px_120px_-30px_rgba(0,0,0,0.95)]' : ''}`}
         style={isMobile ? {
           backgroundImage: `url('/images/for-mobile.webp')`,
           backgroundPosition: 'center top',
@@ -134,15 +134,15 @@ export const Home = () => {
           } : undefined}
         >
           <h1 className="manifesto-hero-title">The Rayls Manifesto</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="border-2 border-[var(--color-yellow)] text-[var(--color-yellow)] px-8 py-3 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity mb-8 bg-transparent"
-          >
-            Sign the Manifesto
-          </button>
           <h2 className="manifesto-hero-subtitle">
             The $100 Trillion Homecoming
           </h2>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="border-2 border-[var(--color-yellow)] text-[var(--color-yellow)] px-8 py-3 rounded-lg font-bold text-lg hover:opacity-90 transition-opacity bg-transparent"
+          >
+            Sign the Manifesto
+          </button>
         </div>
       </div>
 
@@ -151,31 +151,31 @@ export const Home = () => {
         <p className="manifesto-tagline">
           A movement to rebuild global finance.
         </p>
-        <p>
+        <p className="text-lg md:text-xl">
           For decades, opportunity belonged to the privileged.
         </p>
-        <p>
-          <span className="font-bold">Access wasn&apos;t earned; it was permitted.</span>
+        <p className="text-lg md:text-xl">
+          <span className="font-bold text-[var(--color-yellow)]">Access wasn&apos;t earned; it was permitted.</span>
+        </p>
+        <p className="text-base md:text-lg">
+          Then a <span className="font-bold text-xl md:text-2xl">single block in 2009 changed the global economy forever</span>. One quiet signal: a line of code that carried news headlines of bailouts.
         </p>
         <p>
-          Then a single block in 2009 changed everything. When <span className="font-bold">the global economy cracked open, and entire communities lost their livelihoods, one quiet signal appeared</span>: a line of code carrying a newspaper headline about bailouts.
+          Not just Bitcoin, but the <span className="font-bold">belief that finance could be open, transparent, and built for everyone</span>.
         </p>
         <p>
-          Not just Bitcoin, but <span className="font-bold">the belief that finance could be open, transparent, and built for everyone</span>.
+          From that moment, a movement began. Bold developers and thinkers came together to <span className="font-bold">build an open financial infrastructure</span>.
         </p>
-        <p>
-          From that moment, a movement began. Developers, thinkers, and dreamers came together to <span className="font-bold">build an open financial infrastructure</span>.
-        </p>
-        <p>
+        <p className="text-lg md:text-xl">
           <span className="font-bold">Crypto wasn&apos;t born from rebellion.</span>
         </p>
         <p>
           It was born from necessity, and sustained by hope:
         </p>
-        <p>
-          <i>The hope that the next generation wouldn&apos;t need permission to participate.</i>
-        </p>
-        <p>
+        <blockquote className="border-l-4 border-[var(--color-yellow)] pl-6 my-8 italic text-lg md:text-xl text-gray-300">
+          The hope that the next generation wouldn&apos;t need permission to participate.
+        </blockquote>
+        <p className="text-lg md:text-xl font-semibold">
           Today, that hope becomes reality.
         </p>
       </main>
@@ -183,13 +183,13 @@ export const Home = () => {
       <main className="manifesto-article" style={{ marginBottom: "0px" }}>
         <h2>When institutions began to listen</h2>
         <p>
-          For years, the establishment dismissed this movement until <span className="font-bold">the old rails started to crack</span>.
+          For years, the establishment dismissed this movement until the <span className="font-bold">old rails started to crack</span>.
         </p>
         <p>
           Cross-border payments slowed to a crawl. Settlement systems built decades ago became expensive to maintain.
         </p>
-        <p>
-          And for the first time, the institutions that defined the last century looked up and realized: <span className="font-bold">global finance was no longer being built in boardrooms, it was being coded in the open</span>.
+        <p className="text-lg md:text-xl">
+          And for the first time, the institutions that defined the last century looked up and realized: <span className="font-bold text-[var(--color-yellow)]">global finance was no longer being built in boardrooms</span>, it was being coded in the open.
         </p>
         <p>
           This moment isn&apos;t about banks &quot;coming to crypto.&quot; It&apos;s about a shared evolution where both sides finally understand that <span className="font-bold">the rails must be rebuilt together</span>.
@@ -197,42 +197,28 @@ export const Home = () => {
         <p>
           Today, institutions see that the system must evolve. <span className="font-bold">Privacy, compliance, and transparency are non-negotiable</span> for a world that runs on trust and technology.
         </p>
-        <p>
+        <p className="text-lg md:text-xl italic">
           That&apos;s where Rayls stands: not in opposition, but in translation.
         </p>
         <p>
           We&apos;re building the connective tissue that allows a century of institutional capital to <span className="font-bold">move onto open rails safely, compliantly, and at scale</span>.
         </p>
-        <p>
-          From Nuclea, which powers Brazil&apos;s interbank systems, to J.P. Morgan testing tokenized treasuries on public networks, the signs are clear.
-        </p>
-        <p>
-          The financial world isn&apos;t turning its back on decentralization. It&apos;s embracing it carefully, deliberately, and permanently.
-        </p>
-        <p>
-          We built the rails that make this migration possible.
-        </p>
-        <p>
-          <span className="font-bold">And the migration is already happening.</span>
-        </p>
-        <p>
-          Over the next five years, more than <span className="font-bold">$100 trillion</span> of institutional capital will move <u>onchain</u> as a new operating standard.
-        </p>
+
         <h2>Making the invisible visible</h2>
         <p>
           For decades, the world&apos;s most <span className="font-bold">powerful wealth engines operated in silence</span>: private markets, exclusive debt, structured credit, receivables.
         </p>
-        <p>
-          You couldn&apos;t see them, and <span className="font-bold">you couldn&apos;t touch them</span> unless you already belonged.
+        <p className="text-lg md:text-xl">
+          You couldn&apos;t see them, and <span className="font-bold">you couldn&apos;t touch them</span> unless you&apos;d been allowed in.
         </p>
         <p>
           That&apos;s how inequality perpetuated itself. Not always by intent, but by design.
         </p>
         <p>
-          <span className="font-bold">Old systems weren&apos;t built to scale access</span>; they were built to preserve order.
+          <span className="font-bold">Old systems weren&apos;t built to scale access</span>, they were built to preserve order.
         </p>
-        <p>
-          But <span className="font-bold">what happens when technology makes the invisible visible?</span>
+        <p className="text-lg md:text-2xl font-bold text-[var(--color-yellow)] my-6">
+          But what happens when technology makes the invisible visible?
         </p>
         <p>
           When you can tokenize an invoice in São Paulo, and a retail investor in Nairobi can profit from a piece of it safely and transparently?
@@ -240,39 +226,66 @@ export const Home = () => {
         <p>
           When a small factory can turn its receivables into instant liquidity without calling a bank, without waiting 90 days, without being charged for existing outside the system?
         </p>
-        <p>
-          A migrant worker in Dubai can send tokenized deposits home instantly, without losing up to 10% through remittance fees and delays.
+
+        <div className="bg-gradient-to-r from-[var(--color-yellow)]/10 to-transparent border-l-4 border-[var(--color-yellow)] p-6 my-8 rounded-r-lg">
+          <p className="mb-3">
+            A travel guide in Dubai can send tokenized deposits home instantly, without losing up to 10% through remittance fees and delays.
+          </p>
+          <p className="mb-3">
+            A shop owner in Lagos can earn stable yield from verified receivables issued by major institutions on Rayls; something only banks and hedge funds could touch before.
+          </p>
+          <p className="mb-0">
+            Fractional ownership means a student can invest $10, not $10 million.
+          </p>
+        </div>
+
+        <p className="text-xl md:text-2xl font-bold">
+          <span className="text-[var(--color-yellow)]">Tokenization is the great equalizer</span>, and we&apos;ve built it into the rail itself.
         </p>
-        <p>
-          A shop owner in Lagos can earn stable yield from verified receivables issued by major institutions on Rayls; something only banks and hedge funds could touch before.
-        </p>
-        <p>
-          Fractional ownership means a student can invest $10, not $10 million.
-        </p>
-        <p>
-          <span className="font-bold">Tokenization is the great equalizer, and we&apos;ve built it into the rail itself.</span>
-        </p>
-        <p>
-          24/7 markets mean that access no longer closes at 5 p.m.
-        </p>
-        <p>
-          Smart contracts mean yield is automated, not extracted.
-        </p>
-        <p>
-          This is how education becomes empowerment, not by lectures, but by participation.
-        </p>
+
+        <div className="my-8 space-y-2">
+          <p>
+            From Nuclea, which powers Brazil&apos;s interbank systems, to J.P. Morgan testing tokenized treasuries on public networks, the signs are clear.
+          </p>
+          <p>
+            The financial world isn&apos;t turning its back on decentralization. It&apos;s embracing it carefully, deliberately, and permanently.
+          </p>
+          <p className="font-semibold">
+            We built the rails that make this migration possible.
+          </p>
+          <p className="text-lg md:text-xl font-bold">
+            And the migration is already happening.
+          </p>
+          <p className="text-xl md:text-2xl font-bold">
+            Over the next five years, more than <span className="text-[var(--color-yellow)]">$100 trillion</span> of institutional capital will move <u>onchain</u> as a new operating standard.
+          </p>
+        </div>
+
+        <div className="bg-[var(--color-yellow)]/5 border border-[var(--color-yellow)]/30 p-6 my-8 rounded-lg">
+          <p className="mb-3">
+            24/7 markets mean that access no longer closes at 5 p.m.
+          </p>
+          <p className="mb-3">
+            Smart contracts mean yield is automated, not extracted.
+          </p>
+          <p className="mb-0 italic">
+            This is how education becomes empowerment, not by lectures, but by participation.
+          </p>
+        </div>
+
         <p>
           When people understand how value flows, they learn to shape it.
         </p>
-        <p>
-          <span className="font-bold">Every invoice tokenized, every asset fractionalized, is a lesson written in code: <i>this is what inclusion looks like</i>.</span>
+        <p className="text-lg md:text-xl font-bold">
+          Every invoice tokenized, every asset fractionalized, is a lesson written in code: <i className="text-[var(--color-yellow)]">this is what inclusion looks like</i>.
         </p>
+
         <h2>Yield, but with purpose</h2>
         <p>
           In crypto&apos;s early days, yield often meant risk; unsustainable games chasing unsustainable numbers.
         </p>
-        <p>
-          But the future of yield isn&apos;t speculation. Its utility.
+        <p className="text-lg md:text-xl">
+          But the future of yield isn&apos;t speculation. <span className="font-bold">It&apos;s utility</span>.
         </p>
         <p>
           <span className="font-bold">The assets we&apos;re tokenizing (real, regulated, verifiable) are rooted in the physical economy.</span>
@@ -289,42 +302,47 @@ export const Home = () => {
         <p>
           They&apos;re building vaults, liquidity pools, and automated debt lifecycles that finally make <span className="font-bold">institutional-grade yield accessible to everyone transparently, legally, and globally</span>.
         </p>
-        <p>
+        <p className="text-lg md:text-xl font-semibold my-4">
           This is how we redefine return.
         </p>
         <p>
           Because yield is not just about numbers on a screen.
         </p>
-        <p>
-          <span className="font-bold">It&apos;s about the dignity of being part of a system that no longer excludes you.</span>
+        <p className="text-lg md:text-2xl font-bold text-[var(--color-yellow)] my-6">
+          It&apos;s about the dignity of being part of a system that no longer excludes you.
         </p>
         <p>
           When someone in Buenos Aires or Bangalore earns 9% APY from verified, tokenized receivables, that&apos;s not DeFi hype. That&apos;s financial education in action.
         </p>
-        <p>
-          They&apos;re learning how money moves.
-        </p>
-        <p>
-          They&apos;re learning how value grows.
-        </p>
+
+        <div className="my-6 space-y-2">
+          <p className="font-bold text-lg">
+            They&apos;re learning how money moves.
+          </p>
+          <p className="font-bold text-lg">
+            They&apos;re learning how value grows.
+          </p>
+        </div>
+
         <p>
           And they&apos;re doing it inside a system that was once closed to them.
         </p>
         <p>
           Compliance isn&apos;t the enemy here; it&apos;s the safety net that lets people step confidently onto the new rails.
         </p>
-        <p>
+        <p className="italic">
           Every compliant token, every verified asset, is a brick in a bridge between trust and freedom.
         </p>
+
         <h2>The rails we lay</h2>
-        <p>
+        <p className="text-lg md:text-xl">
           <span className="font-bold">Rayls</span> builds compliant, programmable rails for institutional assets to move onto public blockchains. Bringing reliable liquidity and new assets to everyone globally.
         </p>
         <p>
           This story isn&apos;t about overthrowing the old world. It&apos;s about completing it.
         </p>
-        <p>
-          <span className="font-bold">We&apos;re here to rebuild trust where uncertainty once lived, and to extend opportunity where exclusion once ruled.</span>
+        <p className="text-lg md:text-xl font-bold">
+          We&apos;re here to rebuild trust where uncertainty once lived, and to extend opportunity where exclusion once ruled.
         </p>
         <p>
           Rayls exists because our team understands both sides of the bridge.
@@ -338,14 +356,14 @@ export const Home = () => {
         <p>
           And we&apos;ve built a network where they can finally speak the same language.
         </p>
-        <p>
+        <p className="italic">
           Our rails aren&apos;t just code. They&apos;re conviction that privacy can be governed, compliance can be automated, and freedom can be structured.
         </p>
         <p>
           That every policy, every ledger entry, every yield flow can coexist on public infrastructure without compromising safety or sovereignty.
         </p>
-        <p>
-          <span className="font-bold">We are building the tracks where $100 trillion of institutional liquidity meets billions of people hungry for access.</span>
+        <p className="text-xl md:text-2xl font-bold my-6">
+          We are building the tracks where <span className="text-[var(--color-yellow)]">$100 trillion</span> of institutional liquidity meets billions of people hungry for access.
         </p>
         <p>
           Where banks, builders, and communities learn to <span className="font-bold">operate on common ground</span>.
@@ -356,29 +374,39 @@ export const Home = () => {
         <p>
           It&apos;s about a world where every wallet is a gateway to opportunity, and every transaction is a lesson in ownership.
         </p>
-        <p>
+        <p className="text-lg md:text-xl font-semibold my-4">
           This is the moment we&apos;ve been building toward.
         </p>
-        <p>
+        <p className="font-bold">
           We are Rayls.
         </p>
-        <p>
+        <p className="font-bold">
           We are the rails for the next century of finance.
         </p>
-        <p>
-          And as the <span className="font-bold">world&apos;s liquidity moves</span> <u>onchain</u>, <span className="font-bold">we will make sure it flows through rails built for everyone</span>.
+        <p className="text-lg md:text-xl font-bold">
+          And as the <span className="text-[var(--color-yellow)]">world&apos;s liquidity moves <u>onchain</u></span>, we will make sure <span className="text-[var(--color-yellow)]">it flows through rails built for everyone</span>.
         </p>
-        <h2><i>The Time Is Now</i></h2>
-        <p>The $100 trillion migration has begun.</p>
-        <p>
+
+        <h2 className="text-3xl md:text-4xl mt-12"><i>The Time Is Now</i></h2>
+        <p className="text-xl md:text-2xl font-bold">The $100 trillion migration has begun.</p>
+        <p className="text-lg md:text-xl my-4">
           You choose whether you&apos;re early or late.
         </p>
-        <p>
+        <p className="text-lg md:text-xl font-semibold">
           Join the movement. Sign the manifesto.
         </p>
-        <p>
+        <p className="text-lg md:text-xl font-semibold mb-8">
           Build the future with us.
         </p>
+
+        <div className="flex justify-center my-12">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="border-2 border-[var(--color-yellow)] text-[var(--color-yellow)] px-12 py-4 rounded-lg font-bold text-xl hover:bg-[var(--color-yellow)] hover:text-black transition-all duration-300 bg-transparent"
+          >
+            Sign the Manifesto
+          </button>
+        </div>
       </main>
 
       <div className="signature-strip-embedded flex justify-center">
