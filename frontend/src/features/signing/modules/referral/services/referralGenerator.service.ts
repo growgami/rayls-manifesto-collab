@@ -82,38 +82,62 @@ export class ReferralCodeGenerator {
     username: string;
     referredByCode?: string;
   }): Promise<string> {
-    let referralCode = '';
-    let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
+    try {
+      let referralCode = '';
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
 
-    // Generate unique referral code with retry logic
-    while (!isUnique && attempts < maxAttempts) {
-      referralCode = this.generateCode({
-        username: userData.username
+      // Generate unique referral code with retry logic
+      while (!isUnique && attempts < maxAttempts) {
+        referralCode = this.generateCode({
+          username: userData.username
+        });
+
+        const exists = await ReferralDbService.checkReferralCodeExists(referralCode);
+
+        if (!exists) {
+          isUnique = true;
+        }
+        attempts++;
+      }
+
+      if (!isUnique) {
+        throw new Error('Unable to generate unique referral code. Please try again.');
+      }
+
+      // Create referral database record
+      await ReferralDbService.createReferralRecord({
+        xId: userData.xId,
+        referralCode: referralCode,
+        username: userData.username,
+        referredByCode: userData.referredByCode
       });
 
-      const exists = await ReferralDbService.checkReferralCodeExists(referralCode);
+      return referralCode;
+    } catch (error: any) {
+      // Handle duplicate key errors gracefully (E11000 = MongoDB duplicate key)
+      if (error?.code === 11000 || error?.message?.includes('E11000')) {
+        console.log(`ℹ️ Referral already exists for xId: ${userData.xId} (duplicate key during creation - likely race condition)`);
 
-      if (!exists) {
-        isUnique = true;
+        // Fetch the existing referral code
+        const db = await (await import('@/shared/lib/mongodb.lib')).getDatabase();
+        const { ReferralModel } = await import('@/features/signing/modules/referral/models/referral.model');
+        const referralModel = new ReferralModel(db);
+        const existingReferral = await referralModel.findByXId(userData.xId);
+
+        if (existingReferral) {
+          console.log(`✅ Retrieved existing referral code: ${existingReferral.referralCode}`);
+          return existingReferral.referralCode;
+        } else {
+          console.error(`❌ Duplicate key error but referral not found for xId: ${userData.xId}`);
+          throw new Error('Referral creation failed: duplicate key but record not found');
+        }
       }
-      attempts++;
+
+      // Re-throw other errors
+      throw error;
     }
-
-    if (!isUnique) {
-      throw new Error('Unable to generate unique referral code. Please try again.');
-    }
-
-    // Create referral database record
-    await ReferralDbService.createReferralRecord({
-      xId: userData.xId,
-      referralCode: referralCode,
-      username: userData.username,
-      referredByCode: userData.referredByCode
-    });
-
-    return referralCode;
   }
 }
 

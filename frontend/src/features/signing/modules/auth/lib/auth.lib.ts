@@ -73,14 +73,14 @@ export const authOptions: NextAuthOptions = {
 
           const xId = userData.twitterData.id;
 
-          // FAST PATH: Create user only (no referral) - completes OAuth quickly
+          // SYNCHRONOUS PATH: Create user + referral together - completes OAuth in one go
           const [userResult, db] = await Promise.race([
             Promise.all([
               AuthUserService.createUserOnly(userData),
               getDatabase()
             ]),
             new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('User creation timeout')), 3000)
+              setTimeout(() => reject(new Error('User creation timeout')), 5000)
             )
           ]);
 
@@ -90,36 +90,39 @@ export const authOptions: NextAuthOptions = {
           token.isNewUser = userResult.isNewUser;
           token.insufficientFollowers = userResult.insufficientFollowers || false;
 
-          // Fetch wallet data quickly
-          const wallet = await Promise.race([
-            new WalletModel(db).findByXId(xId),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
-          ]);
-
-          token.wallet = wallet ? {
-            walletAddress: wallet.walletAddress,
-            blockchainType: wallet.blockchainType,
-            createdAt: wallet.createdAt
-          } : null;
-
-          // NON-BLOCKING: Start referral creation in background if needed
+          // For new users, try to create referral synchronously
           if (userResult.needsReferralCreation && !userResult.insufficientFollowers) {
-            console.log(`🔄 Starting background referral creation for @${userData.twitterData.username}`);
-            token.needsReferralCreation = true;
-            token.tempUserData = userData;
+            console.log(`🔄 Creating referral synchronously for @${userData.twitterData.username}`);
 
-            // Fire and forget - create referral async (with longer timeout)
-            AuthUserService.createUserReferral(userData)
-              .then(async (referralCode) => {
-                if (referralCode) {
-                  console.log(`✅ Background referral created: ${referralCode}`);
-                } else {
-                  console.error(`❌ Background referral creation failed - will retry on next session`);
-                }
-              })
-              .catch((error) => {
-                console.error('❌ Background referral creation error:', error);
-              });
+            const referralCode = await Promise.race([
+              AuthUserService.createUserReferral(userData),
+              new Promise<null>((resolve) => setTimeout(() => {
+                console.warn(`⏱️ Referral creation timeout in OAuth - will retry in session callback`);
+                resolve(null);
+              }, 4000))
+            ]);
+
+            if (referralCode) {
+              console.log(`✅ Referral created in OAuth: ${referralCode}`);
+              // Fetch the created referral data
+              const referral = await new ReferralModel(db).findByXId(xId);
+              if (referral) {
+                token.referralData = {
+                  referralCode: referral.referralCode,
+                  position: referral.position,
+                  referralCount: referral.referralCount,
+                  linkVisits: referral.linkVisits,
+                  isKOL: referral.isKOL
+                };
+                token.position = referral.position;
+                token.referralCode = referral.referralCode;
+              }
+            } else {
+              // Referral creation timed out - mark for retry in session callback
+              console.warn(`⚠️ Referral creation timed out - marking for session retry`);
+              token.needsReferralCreation = true;
+              token.tempUserData = userData;
+            }
           } else {
             // Existing user or insufficient followers - fetch referral data
             const referral = await Promise.race([
@@ -137,6 +140,18 @@ export const authOptions: NextAuthOptions = {
             token.position = referral?.position;
             token.referralCode = referral?.referralCode;
           }
+
+          // Fetch wallet data
+          const wallet = await Promise.race([
+            new WalletModel(db).findByXId(xId),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+          ]);
+
+          token.wallet = wallet ? {
+            walletAddress: wallet.walletAddress,
+            blockchainType: wallet.blockchainType,
+            createdAt: wallet.createdAt
+          } : null;
 
           token.processingComplete = true;
           token.needsProcessing = false;
@@ -156,66 +171,6 @@ export const authOptions: NextAuthOptions = {
           };
           token.needsProcessing = true;
           token.processingComplete = false;
-        }
-      }
-
-      // Subsequent requests: repair missing referrals if needed
-      else if (token.needsReferralCreation && token.tempUserData) {
-        try {
-          const xId = token.tempUserData.twitterData.id;
-          const db = await getDatabase();
-          const referralModel = new ReferralModel(db);
-
-          // Check if referral was created (might have completed in background)
-          const existingReferral = await referralModel.findByXId(xId);
-
-          if (existingReferral) {
-            console.log(`✅ Referral found during repair check: ${existingReferral.referralCode}`);
-            // Referral exists - update token
-            token.referralData = {
-              referralCode: existingReferral.referralCode,
-              position: existingReferral.position,
-              referralCount: existingReferral.referralCount,
-              linkVisits: existingReferral.linkVisits,
-              isKOL: existingReferral.isKOL
-            };
-            token.position = existingReferral.position;
-            token.referralCode = existingReferral.referralCode;
-            token.needsReferralCreation = false;
-            delete token.tempUserData;
-          } else {
-            console.log(`🔧 Attempting to repair missing referral for xId: ${xId}`);
-            // Referral still missing - try to create it now
-            const referralCode = await Promise.race([
-              AuthUserService.createUserReferral(token.tempUserData),
-              new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000))
-            ]);
-
-            if (referralCode) {
-              console.log(`✅ Referral repaired successfully: ${referralCode}`);
-              // Fetch the newly created referral
-              const newReferral = await referralModel.findByXId(xId);
-              if (newReferral) {
-                token.referralData = {
-                  referralCode: newReferral.referralCode,
-                  position: newReferral.position,
-                  referralCount: newReferral.referralCount,
-                  linkVisits: newReferral.linkVisits,
-                  isKOL: newReferral.isKOL
-                };
-                token.position = newReferral.position;
-                token.referralCode = newReferral.referralCode;
-                token.needsReferralCreation = false;
-                delete token.tempUserData;
-              }
-            } else {
-              console.error(`❌ Referral repair failed - will retry on next session`);
-              // Keep needsReferralCreation true to retry again
-            }
-          }
-        } catch (error) {
-          console.error('Failed referral repair:', error);
-          // Keep needsReferralCreation true to retry on next request
         }
       }
 
