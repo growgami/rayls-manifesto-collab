@@ -13,6 +13,13 @@ export class ReferralDbService {
     const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
+    // CRITICAL: Check if referral already exists to prevent duplicate key errors
+    const existingReferral = await referralModel.findByXId(userData.xId);
+    if (existingReferral) {
+      console.log(`⚠️ Referral already exists for xId: ${userData.xId} - skipping creation`);
+      return;
+    }
+
     // Check if user is a KOL
     const kolEntry = KolCheckService.checkIsKol(userData.xId);
     const isKOL = !!kolEntry;
