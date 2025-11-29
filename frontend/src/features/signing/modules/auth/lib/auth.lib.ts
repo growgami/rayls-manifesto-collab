@@ -15,6 +15,53 @@ const upgradeTwitterImageUrl = (url: string): string => {
   return url.replace(/_normal\.(jpg|jpeg|png|gif|webp)$/i, '.$1');
 };
 
+/**
+ * Retry helper for Twitter API calls with exponential backoff
+ * Handles rate limiting (429) and temporary errors (403, 500, 502, 503)
+ */
+async function retryTwitterApiCall<T>(
+  apiCall: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelayMs: number = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error: any) {
+      lastError = error;
+      const statusCode = error?.status || error?.response?.status;
+
+      // Log the error with details
+      console.error(`[TWITTER-API-RETRY] Attempt ${attempt + 1}/${maxRetries} failed:`, {
+        status: statusCode,
+        message: error?.message,
+        timestamp: new Date().toISOString()
+      });
+
+      // Don't retry on client errors except rate limit (429) and forbidden (403)
+      if (statusCode && statusCode >= 400 && statusCode < 500 && statusCode !== 403 && statusCode !== 429) {
+        console.error(`[TWITTER-API-RETRY] Non-retryable error (${statusCode}), aborting`);
+        throw error;
+      }
+
+      // If this was the last attempt, throw
+      if (attempt === maxRetries - 1) {
+        console.error(`[TWITTER-API-RETRY] Max retries reached, giving up`);
+        throw error;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delayMs = initialDelayMs * Math.pow(2, attempt);
+      console.log(`[TWITTER-API-RETRY] Retrying in ${delayMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError || new Error('Twitter API call failed after retries');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     TwitterProvider({
@@ -25,6 +72,35 @@ export const authOptions: NextAuthOptions = {
         url: "https://api.twitter.com/2/users/me",
         params: {
           "user.fields": "created_at,description,name,profile_image_url,public_metrics,url,username,verified",
+        },
+        // Add custom request function with retry logic
+        async request({ tokens }) {
+          // Retry wrapper for userinfo fetch
+          return await retryTwitterApiCall(async () => {
+            console.log(`[TWITTER-USERINFO] Fetching user info...`);
+            const response = await fetch(
+              `https://api.twitter.com/2/users/me?user.fields=created_at,description,name,profile_image_url,public_metrics,url,username,verified`,
+              {
+                headers: {
+                  Authorization: `Bearer ${tokens.access_token}`,
+                },
+              }
+            );
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`[TWITTER-USERINFO] HTTP ${response.status}:`, errorText);
+
+              const error: any = new Error(`Twitter API error: ${response.status} ${response.statusText}`);
+              error.status = response.status;
+              error.response = { status: response.status, data: errorText };
+              throw error;
+            }
+
+            const data = await response.json();
+            console.log(`[TWITTER-USERINFO] Successfully fetched user: @${data.data?.username}`);
+            return data;
+          }, 3, 1000); // 3 retries, 1 second initial delay
         },
       },
       profile(profile) {
@@ -321,6 +397,56 @@ export const authOptions: NextAuthOptions = {
     },
   },
   debug: process.env.NEXTAUTH_DEBUG === "true",
+  // Event handlers for logging and monitoring
+  events: {
+    async signIn({ user, profile }) {
+      console.log(`✅ [AUTH-EVENT] User signed in:`, {
+        username: (profile as any)?.data?.username,
+        xId: user.id,
+        timestamp: new Date().toISOString()
+      });
+    },
+  },
+  // Error handling and logging
+  logger: {
+    error(code: any, metadata?: any) {
+      // Enhanced logging for OAuth callback errors
+      if (code?.error === 'OAuthCallbackError' || code?.name === 'OAuthCallbackError') {
+        const errorMessage = code?.message || String(code);
+        console.error(`❌ [OAUTH-ERROR] ${errorMessage}`, {
+          error: code?.error || code?.name,
+          providerId: metadata?.providerId,
+          message: errorMessage,
+          timestamp: new Date().toISOString(),
+          metadata: metadata
+        });
+
+        // Special handling for 403 errors
+        if (errorMessage?.includes('403') || errorMessage?.includes('Forbidden')) {
+          console.error(`🚫 [TWITTER-403] Twitter API returned 403 Forbidden:`, {
+            possibleCauses: [
+              'Rate limiting (75 requests per 15 min)',
+              'User revoked app permissions',
+              'Missing required OAuth scopes',
+              'Twitter API temporary issue'
+            ],
+            recommendedAction: 'Check Twitter Developer Portal for rate limits and app status',
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        console.error(`❌ [AUTH-ERROR]`, code, metadata);
+      }
+    },
+    warn(code: any) {
+      console.warn(`⚠️ [AUTH-WARN]`, code);
+    },
+    debug(code: any, metadata?: any) {
+      if (process.env.NEXTAUTH_DEBUG === "true") {
+        console.log(`🔍 [AUTH-DEBUG]`, code, metadata);
+      }
+    },
+  },
   // Cookie configuration for PKCE
   cookies: {
     pkceCodeVerifier: {
