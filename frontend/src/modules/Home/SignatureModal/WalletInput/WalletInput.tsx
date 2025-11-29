@@ -132,7 +132,7 @@ export const WalletInput = () => {
     <div className="wallet-container">
       <div className="wallet-header">
         <h3 className="wallet-title">Submit your wallet to be apart of whats next</h3>
-        <span className="wallet-required-badge">Required</span>
+        
       </div>
 
       <p className="wallet-description">
