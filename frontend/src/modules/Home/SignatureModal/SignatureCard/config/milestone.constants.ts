@@ -76,6 +76,7 @@ export const MILESTONES: IMilestone[] = [
     },
     cardStyling: {
       backgroundImage: "/images/cards/common-card.webp",
+      layoutVariant: "common",
     },
   },
 ];

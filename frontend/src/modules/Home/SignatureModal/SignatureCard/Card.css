@@ -88,17 +88,17 @@
   position: absolute;
   bottom: 8px;
   left: 50%;
-  transform: translateX(-70%);
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .card-badge-number {
   font-size: 32px;
   font-weight: 700;
   color: #fbce6d;
-  text-align: left;
+  text-align: center;
 }
 
 .card-divider {
@@ -138,4 +138,32 @@
   color: var(--footer-color);
   line-height: 1.5;
   margin: 0;
+}
+
+/* Common Card Layout Variant */
+.card-container--common .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 0;
+  margin-top: 100px;
+}
+
+.card-container--common .card-profile {
+  flex-direction: row;
+  align-items: center;
+  margin-left: 30px;
+  margin-top: 0;
+  gap: 32px;
+}
+
+.card-container--common .card-avatar {
+  margin-bottom: 0;
+  width: 80px !important;
+  height: 80px !important;
+  scale: 1.2;
+}
+
+.card-container--common .card-user-info {
+  align-items: flex-start;
 }

@@ -37,6 +37,14 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
     } as React.CSSProperties;
   }, [milestone]);
 
+  // Determine CSS class names based on layout variant
+  const cardContainerClass = useMemo(() => {
+    const { cardStyling = {} } = milestone;
+    return cardStyling.layoutVariant === 'common'
+      ? 'card-container card-container--common'
+      : 'card-container';
+  }, [milestone]);
+
   const handleDownload = async () => {
     if (!cardRef.current || isDownloading) return;
 
@@ -69,7 +77,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
           pointerEvents: 'none'
         }}
       >
-        <div className="card-container" ref={cardRef} style={cardStyles}>
+        <div className={cardContainerClass} ref={cardRef} style={cardStyles}>
           <div className="card-header">
             <div className="card-profile">
               <img
@@ -93,7 +101,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
       {/* Desktop: Visible card preview with buttons below */}
       <div className="card-canvas hidden md:block">
-        <div className="card-container" style={cardStyles}>
+        <div className={cardContainerClass} style={cardStyles}>
           <div className="card-header">
             <div className="card-profile">
               <img
@@ -143,7 +151,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
         {/* Mobile card preview - scaled down */}
         <div className="flex w-full justify-center -my-26">
           <div className="card-canvas" style={{ transform: 'scale(0.4)', transformOrigin: 'center center' }}>
-            <div className="card-container" style={cardStyles}>
+            <div className={cardContainerClass} style={cardStyles}>
               <div className="card-header">
                 <div className="card-profile">
                   <img

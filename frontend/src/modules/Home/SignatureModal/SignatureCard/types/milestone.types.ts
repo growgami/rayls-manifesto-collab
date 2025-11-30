@@ -51,6 +51,13 @@ export interface ICardStyling {
    * Note: backgroundImage takes precedence if both are defined
    */
   backgroundColor?: HexColor;
+
+  /**
+   * Layout variant for the card
+   * 'common' - Alternative layout with centered horizontal profile
+   * undefined - Default layout (used by legendary, epic, rare)
+   */
+  layoutVariant?: 'common';
 }
 
 /**
