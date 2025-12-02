@@ -133,7 +133,7 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
 
           <button
             onClick={() => {
-              const tweetText = `The Rayls manifesto just went live. The early passports are disappearing fast! Get yours before the train leaves the station.\n
+              const tweetText = `The Rayls manifesto is live. Get yours before the train leaves the station.\n
 #${signatureNumber.toLocaleString()}!\n\n`;
               const tweetUrl = 'https://raylsmanifesto.com';
               const twitterIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;

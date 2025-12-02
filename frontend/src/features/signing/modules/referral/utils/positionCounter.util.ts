@@ -95,15 +95,24 @@ export class PositionCounterService {
   }
 
   /**
-   * Gets the total number of signatures
-   * @returns The total signature count (actual number of users who signed)
+   * Gets the total number of signatures from the position counter
+   * @returns The current position counter value (represents total signatures)
    */
   static async getTotalSignatures(): Promise<number> {
     const db = await getDatabase();
-    const referralsCollection = db.collection('referrals');
+    const counterModel = new CounterModel(db);
 
-    // Simply count the documents in the referrals collection
-    // This gives us the actual number of users who have signed
-    return await referralsCollection.countDocuments();
+    // Get the current position counter value
+    // This represents the total number of signatures (counter increments with each new user)
+    const currentPosition = await counterModel.getCurrentValue(this.COUNTER_ID);
+
+    // If counter doesn't exist or is at initial value, return 0
+    // Otherwise, return the counter value minus the initial position (500)
+    // This gives us the actual number of signatures (e.g., position 501 = 1 signature)
+    if (currentPosition === null || currentPosition <= this.INITIAL_POSITION) {
+      return 0;
+    }
+
+    return currentPosition - this.INITIAL_POSITION;
   }
 }

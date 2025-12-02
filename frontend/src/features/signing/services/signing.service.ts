@@ -105,7 +105,7 @@ export class AuthUserService {
       }
 
       // Create referral with timeout protection (increased to 10 seconds)
-      const referralCode = await Promise.race([
+      const referralResult = await Promise.race([
         ReferralCodeGenerator.createUserReferral({
           xId: userData.id,
           username: userData.twitterData.username,
@@ -116,8 +116,13 @@ export class AuthUserService {
         )
       ]);
 
-      console.log(`✅ Referral created successfully for @${userData.twitterData.username}: ${referralCode}`);
-      return referralCode;
+      if (referralResult.success) {
+        console.log(`✅ Referral created successfully for @${userData.twitterData.username}: ${referralResult.referralCode}`);
+        return referralResult.referralCode || null;
+      } else {
+        console.warn(`⚠️ Referral creation returned unsuccessful result`);
+        return null;
+      }
 
     } catch (error) {
       console.error('❌ Error in createUserReferral:', error);
@@ -191,11 +196,13 @@ export class AuthUserService {
           // Continue without referral if cookie reading fails
         }
 
-        referralCode = await ReferralCodeGenerator.createUserReferral({
+        const referralResult = await ReferralCodeGenerator.createUserReferral({
           xId: userData.id,
           username: userData.twitterData.username,
           referredByCode
         });
+
+        referralCode = referralResult.referralCode || undefined;
       }
 
       // Update last login timestamp

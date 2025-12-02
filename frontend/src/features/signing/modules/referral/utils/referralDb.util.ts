@@ -3,21 +3,33 @@ import { ReferralModel, IReferralCreate } from '@/features/signing/modules/refer
 import { PositionCounterService } from '@/features/signing/modules/referral/utils/positionCounter.util';
 import { KolCheckService } from '@/features/signing/modules/referral/services/kolCheck.service';
 
+export interface ReferralCreationResult {
+  success: boolean;
+  alreadyExists: boolean;
+  position?: number;
+  referralCode?: string;
+}
+
 export class ReferralDbService {
   static async createReferralRecord(userData: {
     xId: string;
     referralCode: string;
     username: string;
     referredByCode?: string;
-  }): Promise<void> {
+  }): Promise<ReferralCreationResult> {
     const db = await getDatabase();
     const referralModel = new ReferralModel(db);
 
     // CRITICAL: Check if referral already exists to prevent duplicate key errors
     const existingReferral = await referralModel.findByXId(userData.xId);
     if (existingReferral) {
-      console.log(`⚠️ Referral already exists for xId: ${userData.xId} - skipping creation`);
-      return;
+      console.log(`✅ [IDEMPOTENT] Referral already exists for xId: ${userData.xId} (position: ${existingReferral.position}) - treating as success`);
+      return {
+        success: true,
+        alreadyExists: true,
+        position: existingReferral.position,
+        referralCode: existingReferral.referralCode
+      };
     }
 
     // Check if user is a KOL
@@ -85,6 +97,13 @@ export class ReferralDbService {
         // Don't fail the whole operation
       }
     }
+
+    return {
+      success: true,
+      alreadyExists: false,
+      position,
+      referralCode: userData.referralCode
+    };
   }
 
   static async checkReferralCodeExists(referralCode: string): Promise<boolean> {

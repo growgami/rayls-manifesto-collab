@@ -62,6 +62,59 @@ async function retryTwitterApiCall<T>(
   throw lastError || new Error('Twitter API call failed after retries');
 }
 
+/**
+ * Retry helper for referral creation with exponential backoff
+ * Treats "already exists" as success (idempotency)
+ * More aggressive timeouts: 2s, 4s, 8s
+ */
+async function retryReferralCreation<T>(
+  createFn: () => Promise<T>,
+  context: string,
+  maxRetries: number = 3,
+  initialDelayMs: number = 2000
+): Promise<{ success: boolean; data?: T }> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`🔄 [${context}] Attempt ${attempt + 1}/${maxRetries} - Creating referral...`);
+      const result = await createFn();
+
+      // If result indicates success (including "already exists"), return success
+      if (result && typeof result === 'object' && ('success' in result || 'alreadyExists' in result)) {
+        const typedResult = result as { success?: boolean; alreadyExists?: boolean; position?: number };
+        console.log(`✅ [${context}] Referral creation successful (attempt ${attempt + 1})`, {
+          alreadyExists: typedResult.alreadyExists,
+          position: typedResult.position
+        });
+        return { success: true, data: result };
+      }
+
+      return { success: true, data: result };
+    } catch (error) {
+      const err = error as Error;
+
+      console.error(`❌ [${context}] Attempt ${attempt + 1}/${maxRetries} failed:`, {
+        message: err?.message,
+        name: err?.name,
+        timestamp: new Date().toISOString()
+      });
+
+      // If this was the last attempt, return failure
+      if (attempt === maxRetries - 1) {
+        console.error(`❌ [${context}] Max retries reached - referral creation failed`);
+        return { success: false };
+      }
+
+      // Exponential backoff: 2s, 4s, 8s
+      const delayMs = initialDelayMs * Math.pow(2, attempt);
+      console.log(`⏳ [${context}] Retrying in ${delayMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  console.error(`❌ [${context}] All retry attempts exhausted`);
+  return { success: false };
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     TwitterProvider({
@@ -166,20 +219,26 @@ export const authOptions: NextAuthOptions = {
           token.isNewUser = userResult.isNewUser;
           token.insufficientFollowers = userResult.insufficientFollowers || false;
 
-          // For new users, try to create referral synchronously
+          // For new users, try to create referral synchronously with retry logic
           if (userResult.needsReferralCreation && !userResult.insufficientFollowers) {
-            console.log(`🔄 Creating referral synchronously for @${userData.twitterData.username}`);
+            console.log(`🔄 [OAUTH] Creating referral synchronously for @${userData.twitterData.username}`);
 
-            const referralCode = await Promise.race([
-              AuthUserService.createUserReferral(userData),
-              new Promise<null>((resolve) => setTimeout(() => {
-                console.warn(`⏱️ Referral creation timeout in OAuth - will retry in session callback`);
-                resolve(null);
-              }, 4000))
+            // Use retry mechanism with 12s total timeout (2s + 4s + 6s attempts)
+            const referralResult = await Promise.race([
+              retryReferralCreation(
+                () => AuthUserService.createUserReferral(userData),
+                'OAUTH',
+                3, // 3 retries
+                2000 // 2s initial delay
+              ),
+              new Promise<{ success: false }>((resolve) => setTimeout(() => {
+                console.warn(`⏱️ [OAUTH] Referral creation timeout (12s exceeded) - will retry in JWT callback`);
+                resolve({ success: false });
+              }, 12000))
             ]);
 
-            if (referralCode) {
-              console.log(`✅ Referral created in OAuth: ${referralCode}`);
+            if (referralResult.success && referralResult.data) {
+              console.log(`✅ [OAUTH] Referral created successfully: ${referralResult.data}`);
               // Fetch the created referral data
               const referral = await new ReferralModel(db).findByXId(xId);
               if (referral) {
@@ -194,8 +253,8 @@ export const authOptions: NextAuthOptions = {
                 token.referralCode = referral.referralCode;
               }
             } else {
-              // Referral creation timed out - mark for retry in session callback
-              console.warn(`⚠️ Referral creation timed out - marking for session retry`);
+              // Referral creation failed/timed out - mark for retry in JWT callback
+              console.warn(`⚠️ [OAUTH] Referral creation failed - marking for JWT retry`);
               token.needsReferralCreation = true;
               token.tempUserData = userData;
             }
@@ -285,7 +344,7 @@ export const authOptions: NextAuthOptions = {
           const xId = token.tempUserData.id;
           console.log(`🔄 [JWT-RETRY] Attempting deferred referral creation for xId: ${xId}`);
 
-          // Check if referral was created by another request
+          // Check if referral was created by another request (idempotency check)
           const db = await getDatabase();
           const referralModel = new ReferralModel(db);
           let referral = await referralModel.findByXId(xId);
@@ -305,17 +364,22 @@ export const authOptions: NextAuthOptions = {
             token.needsReferralCreation = false;
             delete token.tempUserData;
           } else {
-            // Referral doesn't exist - try creating it with longer timeout
-            const referralCode = await Promise.race([
-              AuthUserService.createUserReferral(token.tempUserData),
-              new Promise<null>((resolve) => setTimeout(() => {
-                console.warn(`⏱️ [JWT-RETRY] Deferred referral creation timeout for xId: ${xId}`);
-                resolve(null);
-              }, 8000))
+            // Referral doesn't exist - try creating with exponential backoff (20s max)
+            const referralResult = await Promise.race([
+              retryReferralCreation(
+                () => AuthUserService.createUserReferral(token.tempUserData!),
+                'JWT-RETRY',
+                3, // 3 retries
+                3000 // 3s initial delay (3s + 6s + 12s = 21s total)
+              ),
+              new Promise<{ success: false }>((resolve) => setTimeout(() => {
+                console.warn(`⏱️ [JWT-RETRY] Deferred referral creation timeout (20s exceeded) for xId: ${xId}`);
+                resolve({ success: false });
+              }, 20000))
             ]);
 
-            if (referralCode) {
-              console.log(`✅ [JWT-RETRY] Referral created: ${referralCode}`);
+            if (referralResult.success && referralResult.data) {
+              console.log(`✅ [JWT-RETRY] Referral created successfully: ${referralResult.data}`);
               // Fetch the newly created referral
               referral = await referralModel.findByXId(xId);
               if (referral) {
@@ -332,7 +396,7 @@ export const authOptions: NextAuthOptions = {
                 delete token.tempUserData;
               }
             } else {
-              console.error(`❌ [JWT-RETRY] Referral creation still timing out for xId: ${xId} - will retry on next request`);
+              console.error(`❌ [JWT-RETRY] Referral creation failed after all retries for xId: ${xId} - will retry on next request`);
               // Keep needsReferralCreation true to retry on next request
             }
           }

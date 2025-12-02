@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { ReferralDbService } from '@/features/signing/modules/referral/utils/referralDb.util';
+import { ReferralDbService, ReferralCreationResult } from '@/features/signing/modules/referral/utils/referralDb.util';
 
 export interface ReferralCodeOptions {
   length?: number;
@@ -81,7 +81,7 @@ export class ReferralCodeGenerator {
     xId: string;
     username: string;
     referredByCode?: string;
-  }): Promise<string> {
+  }): Promise<ReferralCreationResult> {
     try {
       let referralCode = '';
       let isUnique = false;
@@ -106,19 +106,21 @@ export class ReferralCodeGenerator {
         throw new Error('Unable to generate unique referral code. Please try again.');
       }
 
-      // Create referral database record
-      await ReferralDbService.createReferralRecord({
+      // Create referral database record - returns ReferralCreationResult
+      const result = await ReferralDbService.createReferralRecord({
         xId: userData.xId,
         referralCode: referralCode,
         username: userData.username,
         referredByCode: userData.referredByCode
       });
 
-      return referralCode;
-    } catch (error: any) {
+      return result;
+    } catch (error: unknown) {
+      const err = error as { code?: number; message?: string };
+
       // Handle duplicate key errors gracefully (E11000 = MongoDB duplicate key)
-      if (error?.code === 11000 || error?.message?.includes('E11000')) {
-        console.log(`ℹ️ Referral already exists for xId: ${userData.xId} (duplicate key during creation - likely race condition)`);
+      if (err?.code === 11000 || err?.message?.includes('E11000')) {
+        console.log(`ℹ️ [IDEMPOTENT] Referral already exists for xId: ${userData.xId} (duplicate key during creation - race condition handled)`);
 
         // Fetch the existing referral code
         const db = await (await import('@/shared/lib/mongodb.lib')).getDatabase();
@@ -127,8 +129,13 @@ export class ReferralCodeGenerator {
         const existingReferral = await referralModel.findByXId(userData.xId);
 
         if (existingReferral) {
-          console.log(`✅ Retrieved existing referral code: ${existingReferral.referralCode}`);
-          return existingReferral.referralCode;
+          console.log(`✅ [IDEMPOTENT] Retrieved existing referral: ${existingReferral.referralCode}`);
+          return {
+            success: true,
+            alreadyExists: true,
+            position: existingReferral.position,
+            referralCode: existingReferral.referralCode
+          };
         } else {
           console.error(`❌ Duplicate key error but referral not found for xId: ${userData.xId}`);
           throw new Error('Referral creation failed: duplicate key but record not found');
