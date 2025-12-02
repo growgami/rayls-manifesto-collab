@@ -90,22 +90,34 @@ export const Home = () => {
   }
 
   return (
-    <div
-      className="relative min-h-screen"
-      style={{
-        backgroundImage: isMobile
-          ? `url('/images/for-mobile.webp')`
-          : `url('/images/background.webp')`,
-        backgroundPosition: isMobile ? 'center top' : 'center 35%',
-        backgroundSize: 'cover',
-        backgroundAttachment: 'fixed',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      {/* Hero Section - Full viewport landing */}
+    <>
+      {/* Fixed background for mobile */}
+      {isMobile && (
+        <div
+          className="fixed inset-0 z-0"
+          style={{
+            backgroundImage: `url('/images/for-mobile.webp')`,
+            backgroundPosition: 'top center',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+      )}
+
       <div
-        className="relative min-h-screen flex flex-col"
+        className="relative min-h-screen"
+        style={!isMobile ? {
+          backgroundImage: `url('/images/background.webp')`,
+          backgroundPosition: 'center 35%',
+          backgroundSize: 'cover',
+          backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
+        } : undefined}
       >
+        {/* Hero Section - Full viewport landing */}
+        <div
+          className="relative min-h-screen flex flex-col"
+        >
         {/* Fixed header at top with parallax */}
         <header
           className="manifesto-header-fixed"
@@ -177,7 +189,7 @@ export const Home = () => {
         </p>
       </main>
 
-      <main className="manifesto-article" style={{ marginBottom: "0px" }}>
+      <main className="manifesto-article" style={{ marginTop:"1em", marginBottom: "0px" }}>
         <h2>When institutions began to listen</h2>
         <p>
           For years, the establishment dismissed this movement until the <span className="font-bold">old rails started to crack</span>.
@@ -425,6 +437,7 @@ export const Home = () => {
       )}
 
       <SignatureModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-    </div>
+      </div>
+    </>
   );
 };
