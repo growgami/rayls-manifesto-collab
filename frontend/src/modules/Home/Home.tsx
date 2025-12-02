@@ -91,23 +91,20 @@ export const Home = () => {
 
   return (
     <div
-      className={!isMobile ? 'relative min-h-screen' : ''}
-      style={!isMobile ? {
-        backgroundImage: `url('/images/background.webp')`,
-        backgroundPosition: 'center 35%',
+      className="relative min-h-screen"
+      style={{
+        backgroundImage: isMobile
+          ? `url('/images/for-mobile.webp')`
+          : `url('/images/background.webp')`,
+        backgroundPosition: isMobile ? 'center top' : 'center 35%',
         backgroundSize: 'cover',
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
-      } : undefined}
+      }}
     >
       {/* Hero Section - Full viewport landing */}
       <div
-        className={`relative min-h-screen flex flex-col ${isMobile ? 'bg-no-repeat shadow-[inset_0_-100px_120px_-30px_rgba(0,0,0,0.95)]' : ''}`}
-        style={isMobile ? {
-          backgroundImage: `url('/images/for-mobile.webp')`,
-          backgroundPosition: 'center top',
-          backgroundSize: 'cover'
-        } : undefined}
+        className="relative min-h-screen flex flex-col"
       >
         {/* Fixed header at top with parallax */}
         <header
@@ -204,12 +201,30 @@ export const Home = () => {
           We&apos;re building the connective tissue that allows a century of institutional capital to <span className="font-bold">move onto open rails safely, compliantly, and at scale</span>.
         </p>
 
+        <div className="my-8 space-y-2">
+          <p>
+            From Nuclea, which powers Brazil&apos;s interbank systems, to J.P. Morgan testing tokenized treasuries on public networks, the signs are clear.
+          </p>
+          <p>
+            The financial world isn&apos;t turning its back on decentralization. It&apos;s embracing it carefully, deliberately, and permanently.
+          </p>
+          <p className="font-semibold">
+            We built the rails that make this migration possible.
+          </p>
+          <p className="text-lg md:text-xl font-bold">
+            And the migration is already happening.
+          </p>
+          <p className="text-xl md:text-2xl font-bold">
+            Over the next five years, more than <span className="text-[var(--color-yellow)]">$100 trillion</span> of institutional capital will move <u>onchain</u> as a new operating standard.
+          </p>
+        </div>
+
         <h2>Making the invisible visible</h2>
         <p>
           For decades, the world&apos;s most <span className="font-bold">powerful wealth engines operated in silence</span>: private markets, exclusive debt, structured credit, receivables.
         </p>
         <p className="text-lg md:text-xl">
-          You couldn&apos;t see them, and <span className="font-bold">you couldn&apos;t touch them</span> unless you&apos;d been allowed in.
+          You couldn&apos;t see them, and <span className="font-bold">you couldn&apos;t touch them</span> unless you already belonged.
         </p>
         <p>
           That&apos;s how inequality perpetuated itself. Not always by intent, but by design.
@@ -229,7 +244,7 @@ export const Home = () => {
 
         <div className="bg-gradient-to-r from-[var(--color-yellow)]/10 to-transparent border-l-4 border-[var(--color-yellow)] p-6 my-8 rounded-r-lg">
           <p className="mb-3">
-            A travel guide in Dubai can send tokenized deposits home instantly, without losing up to 10% through remittance fees and delays.
+            A migrant worker in Dubai can send tokenized deposits home instantly, without losing up to 10% through remittance fees and delays.
           </p>
           <p className="mb-3">
             A shop owner in Lagos can earn stable yield from verified receivables issued by major institutions on Rayls; something only banks and hedge funds could touch before.
@@ -242,24 +257,6 @@ export const Home = () => {
         <p className="text-xl md:text-2xl font-bold">
           <span className="text-[var(--color-yellow)]">Tokenization is the great equalizer</span>, and we&apos;ve built it into the rail itself.
         </p>
-
-        <div className="my-8 space-y-2">
-          <p>
-            From Nuclea, which powers Brazil&apos;s interbank systems, to J.P. Morgan testing tokenized treasuries on public networks, the signs are clear.
-          </p>
-          <p>
-            The financial world isn&apos;t turning its back on decentralization. It&apos;s embracing it carefully, deliberately, and permanently.
-          </p>
-          <p className="font-semibold">
-            We built the rails that make this migration possible.
-          </p>
-          <p className="text-lg md:text-xl font-bold">
-            And the migration is already happening.
-          </p>
-          <p className="text-xl md:text-2xl font-bold">
-            Over the next five years, more than <span className="text-[var(--color-yellow)]">$100 trillion</span> of institutional capital will move <u>onchain</u> as a new operating standard.
-          </p>
-        </div>
 
         <div className="bg-[var(--color-yellow)]/5 border border-[var(--color-yellow)]/30 p-6 my-8 rounded-lg">
           <p className="mb-3">
@@ -388,16 +385,7 @@ export const Home = () => {
         </p>
 
         <h2 className="text-3xl md:text-4xl mt-12"><i>The Time Is Now</i></h2>
-        <p className="text-xl md:text-2xl font-bold">The $100 trillion migration has begun.</p>
-        <p className="text-lg md:text-xl my-4">
-          You choose whether you&apos;re early or late.
-        </p>
-        <p className="text-lg md:text-xl font-semibold">
-          Join the movement. Sign the manifesto.
-        </p>
-        <p className="text-lg md:text-xl font-semibold mb-8">
-          Build the future with us.
-        </p>
+        <p className="text-xl md:text-2xl font-bold mb-8">The $100 trillion migration has begun.</p>
 
         <div className="flex justify-center my-12">
           <button

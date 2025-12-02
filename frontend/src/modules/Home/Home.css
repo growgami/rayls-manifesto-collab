@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0 24px 32px;
+  padding: 0 24px 16px;
   max-width: 900px;
   margin: -40px auto 0;
   width: 100%;
@@ -17,7 +17,7 @@
 
 @media (min-width: 768px) {
   .manifesto-hero-content {
-    padding: 0 32px 80px;
+    padding: 0 32px 40px;
     margin: -60px auto 0;
   }
 }
@@ -105,7 +105,7 @@
     0 0 16px rgba(0, 0, 0, 0.8),
     0 0 32px rgba(0, 0, 0, 0.6),
     0 2px 4px rgba(0, 0, 0, 0.9);
-  margin: 3em auto;
+  margin: -5.5em auto 3em;
   padding-bottom: 5em;
   line-height: 1.8;
   padding-inline: 20px;
