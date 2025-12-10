@@ -8,6 +8,7 @@ export interface ReferralCreationResult {
   alreadyExists: boolean;
   position?: number;
   referralCode?: string;
+  isKOL?: boolean;
 }
 
 export class ReferralDbService {
@@ -28,7 +29,8 @@ export class ReferralDbService {
         success: true,
         alreadyExists: true,
         position: existingReferral.position,
-        referralCode: existingReferral.referralCode
+        referralCode: existingReferral.referralCode,
+        isKOL: existingReferral.isKOL
       };
     }
 
@@ -113,7 +115,8 @@ export class ReferralDbService {
       success: true,
       alreadyExists: false,
       position,
-      referralCode: userData.referralCode
+      referralCode: userData.referralCode,
+      isKOL
     };
   }
 

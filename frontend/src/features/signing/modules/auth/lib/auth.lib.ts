@@ -354,6 +354,13 @@ export const authOptions: NextAuthOptions = {
       // Check if referral is still processing
       else if (token.referralProcessing && token.referralJobId) {
         const db = await getDatabase();
+        const xId = (token.twitterData as TwitterUserData)?.id;
+
+        if (!xId) {
+          console.error('❌ [JWT] No xId found in token for referral status check');
+          return token;
+        }
+
         const referral = await new ReferralModel(db).findByXId(xId);
 
         if (referral) {
@@ -369,7 +376,7 @@ export const authOptions: NextAuthOptions = {
           token.referralCode = referral.referralCode;
           token.referralProcessing = false;
           delete token.referralJobId;
-          console.log(`✅ [JWT] Referral completed for @${existingUser.username}`);
+          console.log(`✅ [JWT] Referral completed for xId: ${xId}`);
         } else {
           // Check job status
           const { getReferralQueue } = await import('@/shared/lib/queue.lib');
@@ -399,7 +406,7 @@ export const authOptions: NextAuthOptions = {
               token.referralFailed = true;
               token.referralProcessing = false;
               delete token.referralJobId;
-              console.error(`❌ [JWT] Referral job failed for @${existingUser.username}`);
+              console.error(`❌ [JWT] Referral job failed for xId: ${xId}`);
             }
             // Keep polling if waiting/active
           } else {

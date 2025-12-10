@@ -15,7 +15,7 @@ interface ReferralJobData {
 }
 
 async function processReferralJob(job: Job<ReferralJobData>) {
-  const { xId, username, referredByCode, twitterData, name, email, image } = job.data;
+  const { xId, username, referredByCode } = job.data;
 
   console.log(`🔄 [WORKER] Processing referral for @${username} (xId: ${xId})`);
 
@@ -23,10 +23,6 @@ async function processReferralJob(job: Job<ReferralJobData>) {
     const result = await ReferralCodeGenerator.createUserReferral({
       xId,
       username,
-      name,
-      email,
-      image,
-      twitterData,
       referredByCode,
     });
 
