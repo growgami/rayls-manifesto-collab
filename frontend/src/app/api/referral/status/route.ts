@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const state = await job.getState();
     const waitingCount = await queue.getWaitingCount();
-    const estimatedWaitTime = Math.ceil((waitingCount * 2) / 5); // 5 concurrency, ~2s per job
+    const estimatedWaitTime = Math.ceil((waitingCount * 2) / 10); // 10 concurrency, ~2s per job
 
     if (state === 'completed') {
       // Job completed, refetch referral

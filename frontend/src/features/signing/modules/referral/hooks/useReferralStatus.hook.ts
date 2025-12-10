@@ -12,7 +12,7 @@ interface ReferralStatus {
 
 export function useReferralStatus(shouldPoll: boolean) {
   const [status, setStatus] = useState<ReferralStatus>({ status: 'idle' });
-  const [pollCount, setPollCount] = useState(0);
+  const pollCountRef = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { update } = useSession();
 
@@ -22,11 +22,27 @@ export function useReferralStatus(shouldPoll: boolean) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
+      pollCountRef.current = 0;
       return;
     }
 
     const pollStatus = async () => {
       try {
+        pollCountRef.current += 1;
+
+        // Max 60 polls (2 minutes timeout)
+        if (pollCountRef.current > 60) {
+          setStatus({
+            status: 'failed',
+            error: 'Request timeout. Please refresh the page.',
+          });
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          return;
+        }
+
         const response = await fetch('/api/referral/status');
         const data = await response.json();
 
@@ -44,20 +60,6 @@ export function useReferralStatus(shouldPoll: boolean) {
             await update();
           }
         }
-
-        setPollCount((prev) => prev + 1);
-
-        // Max 60 polls (2 minutes)
-        if (pollCount >= 60) {
-          setStatus({
-            status: 'failed',
-            error: 'Request timeout. Please refresh the page.',
-          });
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        }
       } catch (error) {
         console.error('Polling error:', error);
       }
@@ -72,9 +74,10 @@ export function useReferralStatus(shouldPoll: boolean) {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [shouldPoll, pollCount]);
+  }, [shouldPoll, update]);
 
   return status;
 }

@@ -191,15 +191,20 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
           </div>
           {positionLoading || isProcessing ? (
             <div className="modal-body">
-              <Card
-                user={{
-                  name: twitterData.name,
-                  username: twitterData.username,
-                  profileImageUrl: twitterData.profile_image_url,
-                }}
-                signatureNumber={finalPosition || 0}
-                isProcessing={true}
-              />
+              <div className="flex flex-col items-center justify-center gap-4 py-12 px-4">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+                <h3 className="text-xl font-semibold text-white text-center">
+                  Generating your signature card...
+                </h3>
+                <p className="text-sm text-gray-400 text-center max-w-md">
+                  {referralStatus.estimatedWaitTime && referralStatus.estimatedWaitTime > 0 ? (
+                    <>High traffic detected. Estimated wait time: ~{referralStatus.estimatedWaitTime} seconds.</>
+                  ) : (
+                    <>This usually takes a few seconds.</>
+                  )}
+                  {' '}Please don&apos;t close this window.
+                </p>
+              </div>
             </div>
           ) : referralStatus.status === 'failed' ? (
             <div className="modal-body">

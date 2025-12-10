@@ -57,7 +57,7 @@ export async function startReferralWorker(): Promise<void> {
 
   const connection = await getRedisClient();
   const prefix = process.env.BULL_QUEUE_PREFIX || 'rayls';
-  const concurrency = parseInt(process.env.BULL_CONCURRENCY || '5', 10);
+  const concurrency = parseInt(process.env.BULL_CONCURRENCY || '10', 10);
 
   worker = new Worker('referral-creation', processReferralJob, {
     connection,
