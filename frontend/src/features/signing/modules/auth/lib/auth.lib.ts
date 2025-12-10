@@ -219,44 +219,57 @@ export const authOptions: NextAuthOptions = {
           token.isNewUser = userResult.isNewUser;
           token.insufficientFollowers = userResult.insufficientFollowers || false;
 
-          // For new users, try to create referral synchronously with retry logic
+          // Queue referral creation instead of synchronous processing
           if (userResult.needsReferralCreation && !userResult.insufficientFollowers) {
-            console.log(`🔄 [OAUTH] Creating referral synchronously for @${userData.twitterData.username}`);
+            console.log(
+              `🔄 [OAUTH] Queuing referral creation for @${userData.twitterData.username}`
+            );
 
-            // Use retry mechanism with 12s total timeout (2s + 4s + 6s attempts)
-            const referralResult = await Promise.race([
-              retryReferralCreation(
-                () => AuthUserService.createUserReferral(userData),
-                'OAUTH',
-                3, // 3 retries
-                2000 // 2s initial delay
-              ),
-              new Promise<{ success: false }>((resolve) => setTimeout(() => {
-                console.warn(`⏱️ [OAUTH] Referral creation timeout (12s exceeded) - will retry in JWT callback`);
-                resolve({ success: false });
-              }, 12000))
-            ]);
+            try {
+              const { getReferralQueue } = await import('@/shared/lib/queue.lib');
+              const queue = await getReferralQueue();
 
-            if (referralResult.success && referralResult.data) {
-              console.log(`✅ [OAUTH] Referral created successfully: ${referralResult.data}`);
-              // Fetch the created referral data
-              const referral = await new ReferralModel(db).findByXId(xId);
-              if (referral) {
-                token.referralData = {
-                  referralCode: referral.referralCode,
-                  position: referral.position,
-                  referralCount: referral.referralCount,
-                  linkVisits: referral.linkVisits,
-                  isKOL: referral.isKOL
-                };
-                token.position = referral.position;
-                token.referralCode = referral.referralCode;
+              // Get referral cookie
+              const cookies = await import('next/headers');
+              const cookieStore = cookies.cookies();
+              const referralCookie = (await cookieStore).get('sentient_ref');
+              let referredByCode: string | undefined;
+
+              if (referralCookie) {
+                try {
+                  const parsedCookie = JSON.parse(referralCookie.value);
+                  referredByCode = parsedCookie.referralCode;
+                  console.log(`🔗 [OAUTH] Found referral code: ${referredByCode}`);
+                } catch {
+                  console.log('⚠️ [OAUTH] Failed to parse referral cookie');
+                }
               }
-            } else {
-              // Referral creation failed/timed out - mark for retry in JWT callback
-              console.warn(`⚠️ [OAUTH] Referral creation failed - marking for JWT retry`);
-              token.needsReferralCreation = true;
-              token.tempUserData = userData;
+
+              // Add job to queue with deduplication
+              const job = await queue.add(
+                'create-referral',
+                {
+                  xId: userData.id,
+                  username: userData.twitterData.username,
+                  name: userData.name,
+                  email: userData.email,
+                  image: userData.image,
+                  twitterData: userData.twitterData,
+                  referredByCode,
+                },
+                {
+                  jobId: `referral-${userData.id}`, // Deduplication key
+                  removeOnComplete: true,
+                  removeOnFail: false,
+                }
+              );
+
+              console.log(`✅ [OAUTH] Referral job queued: ${job.id}`);
+              token.referralProcessing = true;
+              token.referralJobId = job.id;
+            } catch (queueError) {
+              console.error('❌ [OAUTH] Failed to queue:', queueError);
+              token.needsReferralCreation = true; // Fallback retry
             }
           } else {
             // Existing user or insufficient followers - fetch referral data
@@ -338,71 +351,63 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Retry referral creation on subsequent requests if it failed initially
-      else if (token.needsReferralCreation && token.tempUserData && !token.insufficientFollowers) {
-        try {
-          const xId = token.tempUserData.id;
-          console.log(`🔄 [JWT-RETRY] Attempting deferred referral creation for xId: ${xId}`);
+      // Check if referral is still processing
+      else if (token.referralProcessing && token.referralJobId) {
+        const db = await getDatabase();
+        const referral = await new ReferralModel(db).findByXId(xId);
 
-          // Check if referral was created by another request (idempotency check)
-          const db = await getDatabase();
-          const referralModel = new ReferralModel(db);
-          let referral = await referralModel.findByXId(xId);
+        if (referral) {
+          // Completed - update token
+          token.referralData = {
+            referralCode: referral.referralCode,
+            position: referral.position,
+            isKOL: referral.isKOL,
+            referralCount: referral.referralCount,
+            linkVisits: referral.linkVisits,
+          };
+          token.position = referral.position;
+          token.referralCode = referral.referralCode;
+          token.referralProcessing = false;
+          delete token.referralJobId;
+          console.log(`✅ [JWT] Referral completed for @${existingUser.username}`);
+        } else {
+          // Check job status
+          const { getReferralQueue } = await import('@/shared/lib/queue.lib');
+          const queue = await getReferralQueue();
+          const job = await queue.getJob(token.referralJobId as string);
 
-          if (referral) {
-            console.log(`✅ [JWT-RETRY] Referral found (created by another process): ${referral.referralCode}`);
-            // Update token with existing referral data
-            token.referralData = {
-              referralCode: referral.referralCode,
-              position: referral.position,
-              referralCount: referral.referralCount,
-              linkVisits: referral.linkVisits,
-              isKOL: referral.isKOL
-            };
-            token.position = referral.position;
-            token.referralCode = referral.referralCode;
-            token.needsReferralCreation = false;
-            delete token.tempUserData;
-          } else {
-            // Referral doesn't exist - try creating with exponential backoff (20s max)
-            const referralResult = await Promise.race([
-              retryReferralCreation(
-                () => AuthUserService.createUserReferral(token.tempUserData!),
-                'JWT-RETRY',
-                3, // 3 retries
-                3000 // 3s initial delay (3s + 6s + 12s = 21s total)
-              ),
-              new Promise<{ success: false }>((resolve) => setTimeout(() => {
-                console.warn(`⏱️ [JWT-RETRY] Deferred referral creation timeout (20s exceeded) for xId: ${xId}`);
-                resolve({ success: false });
-              }, 20000))
-            ]);
+          if (job) {
+            const state = await job.getState();
 
-            if (referralResult.success && referralResult.data) {
-              console.log(`✅ [JWT-RETRY] Referral created successfully: ${referralResult.data}`);
-              // Fetch the newly created referral
-              referral = await referralModel.findByXId(xId);
-              if (referral) {
+            if (state === 'completed') {
+              // Refetch referral
+              const referralAfterJob = await new ReferralModel(db).findByXId(xId);
+              if (referralAfterJob) {
                 token.referralData = {
-                  referralCode: referral.referralCode,
-                  position: referral.position,
-                  referralCount: referral.referralCount,
-                  linkVisits: referral.linkVisits,
-                  isKOL: referral.isKOL
+                  referralCode: referralAfterJob.referralCode,
+                  position: referralAfterJob.position,
+                  isKOL: referralAfterJob.isKOL,
+                  referralCount: referralAfterJob.referralCount,
+                  linkVisits: referralAfterJob.linkVisits,
                 };
-                token.position = referral.position;
-                token.referralCode = referral.referralCode;
-                token.needsReferralCreation = false;
-                delete token.tempUserData;
+                token.position = referralAfterJob.position;
+                token.referralCode = referralAfterJob.referralCode;
+                token.referralProcessing = false;
+                delete token.referralJobId;
               }
-            } else {
-              console.error(`❌ [JWT-RETRY] Referral creation failed after all retries for xId: ${xId} - will retry on next request`);
-              // Keep needsReferralCreation true to retry on next request
+            } else if (state === 'failed') {
+              token.referralFailed = true;
+              token.referralProcessing = false;
+              delete token.referralJobId;
+              console.error(`❌ [JWT] Referral job failed for @${existingUser.username}`);
             }
+            // Keep polling if waiting/active
+          } else {
+            // Job not found, mark as failed
+            token.referralFailed = true;
+            token.referralProcessing = false;
+            delete token.referralJobId;
           }
-        } catch (error) {
-          console.error('[JWT-RETRY] Error during deferred referral creation:', error);
-          // Keep needsReferralCreation true to retry on next request
         }
       }
 

@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@zumer/snapdom": "^2.0.0",
+    "bullmq": "^5.65.1",
+    "ioredis": "^5.8.2",
     "mongodb": "^7.0.0",
-    "next": "16.0.3",
+    "next": "^16.0.8",
     "next-auth": "^4.24.13",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/features/signing/modules/auth/hooks/useAuth.hook";
 import { useUserPosition } from "@/features/signing/modules/signature/hooks/useUserPosition.hook";
 import { useUserReferral } from "@/features/signing/modules/referral/hooks/useUserReferral.hook";
+import { useReferralStatus } from "@/features/signing/modules/referral/hooks/useReferralStatus.hook";
 import { Card } from "./SignatureCard/Card";
 import { Referral } from "./ReferralCodes/Referral";
 import { WalletInput } from "./WalletInput/WalletInput";
@@ -20,6 +21,17 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
   const { data: userPosition, isLoading: positionLoading } = useUserPosition();
   const { referralCode, data: referralData } = useUserReferral();
   const isKOL = referralData?.isKOL || false;
+
+  // Poll for referral status if needed
+  const shouldPollReferral =
+    isAuthenticated && !isKOL && !insufficientFollowers && !referralCode;
+
+  const referralStatus = useReferralStatus(shouldPollReferral);
+
+  const finalPosition = referralStatus.position || userPosition;
+  const finalReferralCode = referralStatus.referralCode || referralCode;
+  const isProcessing =
+    referralStatus.status === 'pending' || referralStatus.status === 'processing';
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -177,10 +189,31 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
               <span className="sr-only">Close</span>
             </button>
           </div>
-          {positionLoading ? (
+          {positionLoading || isProcessing ? (
             <div className="modal-body">
-              <div className="modal-text-section">
-                <p className="modal-description">Loading your signature...</p>
+              <Card
+                user={{
+                  name: twitterData.name,
+                  username: twitterData.username,
+                  profileImageUrl: twitterData.profile_image_url,
+                }}
+                signatureNumber={finalPosition || 0}
+                isProcessing={true}
+              />
+            </div>
+          ) : referralStatus.status === 'failed' ? (
+            <div className="modal-body">
+              <div className="flex flex-col items-center gap-4 py-12 px-4">
+                <h3 className="text-xl font-semibold text-red-500">Generation Failed</h3>
+                <p className="text-center text-gray-300">
+                  {referralStatus.error || 'High traffic. Please try again in 1 hour.'}
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="rounded-lg bg-white px-6 py-3 font-semibold text-black transition-all hover:bg-gray-200"
+                >
+                  Retry
+                </button>
               </div>
             </div>
           ) : (
@@ -192,10 +225,11 @@ export const SignatureModal = ({ isOpen, onClose }: SignatureModalProps) => {
                     username: twitterData.username,
                     profileImageUrl: twitterData.profile_image_url,
                   }}
-                  signatureNumber={userPosition || 0}
+                  signatureNumber={finalPosition || 0}
+                  isProcessing={false}
                 />
-                {referralCode ? (
-                  <Referral referralCode={referralCode} />
+                {finalReferralCode ? (
+                  <Referral referralCode={finalReferralCode} />
                 ) : (
                   <WalletInput />
                 )}

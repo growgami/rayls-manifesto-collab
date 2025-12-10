@@ -12,9 +12,10 @@ interface CardProps {
     profileImageUrl: string;
   };
   signatureNumber: number;
+  isProcessing?: boolean;
 }
 
-export const Card = ({ user, signatureNumber }: CardProps) => {
+export const Card = ({ user, signatureNumber, isProcessing }: CardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -62,6 +63,21 @@ export const Card = ({ user, signatureNumber }: CardProps) => {
       setIsDownloading(false);
     }
   };
+
+  // Show loading state while processing
+  if (isProcessing) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-12 px-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+        <h3 className="text-xl font-semibold text-white text-center">
+          Generating your signature card...
+        </h3>
+        <p className="text-sm text-gray-400 text-center max-w-md">
+          This usually takes a few seconds. Please don&apos;t close this window.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

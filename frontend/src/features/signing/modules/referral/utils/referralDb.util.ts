@@ -43,6 +43,17 @@ export class ReferralDbService {
       console.log(`👑 KOL detected: ${userData.username} (xId: ${userData.xId}) - Assigned position ${position}`);
     } else {
       position = await PositionCounterService.getNextPosition();
+
+      // CRITICAL VALIDATION: Reject invalid positions
+      if (!position || position <= 500) {
+        console.error(
+          `❌ [VALIDATION] Invalid position ${position} for ${userData.username}`
+        );
+        throw new Error(
+          `Invalid position assigned: ${position}. Counter may not be initialized.`
+        );
+      }
+
       console.log(`📝 Regular user: ${userData.username} - Assigned position ${position}`);
     }
 
