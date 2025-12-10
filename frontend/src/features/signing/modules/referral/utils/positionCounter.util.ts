@@ -7,14 +7,21 @@ export class PositionCounterService {
   private static readonly INITIAL_POSITION = 500; // First user gets position 501
 
   /**
-   * Checks if position is at a milestone boundary and returns next valid position
+   * Checks if position is at a milestone boundary or in a gap, and returns next valid position
    * @param position The current position to check
-   * @returns The next valid position (same if not at boundary, or skipped to next milestone)
+   * @returns The next valid position (same if valid, or skipped to next milestone if in gap)
    */
   private static getNextValidPosition(position: number): number {
     for (const boundary of MILESTONE_BOUNDARIES) {
+      // Check if position is exactly at the boundary max
       if (position === boundary.max) {
         console.log(`Position ${position} hit milestone boundary. Skipping to ${boundary.nextStart}`);
+        return boundary.nextStart;
+      }
+
+      // Check if position falls within the gap range (should never be assigned)
+      if (position >= boundary.gapStart && position <= boundary.gapEnd) {
+        console.log(`Position ${position} is in reserved gap (${boundary.gapStart}-${boundary.gapEnd}). Skipping to ${boundary.nextStart}`);
         return boundary.nextStart;
       }
     }

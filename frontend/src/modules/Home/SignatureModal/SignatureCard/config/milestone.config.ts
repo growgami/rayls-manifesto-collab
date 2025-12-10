@@ -3,6 +3,7 @@ import {
   IMilestoneLookupResult,
 } from "@/modules/Home/SignatureModal/SignatureCard/types/milestone.types";
 import { MILESTONES, DEFAULT_MILESTONE } from "./milestone.constants";
+import { MILESTONE_BOUNDARIES } from "@/features/signing/config/milestone-boundaries.constants";
 
 /**
  * Milestone Configuration Utility
@@ -12,6 +13,7 @@ import { MILESTONES, DEFAULT_MILESTONE } from "./milestone.constants";
 export class MilestoneConfig {
   /**
    * Finds the appropriate milestone for a given signature number
+   * Handles both regular positions and gap positions
    *
    * @param signatureNumber - The signature number to lookup
    * @returns Milestone configuration and whether it's the default fallback
@@ -30,8 +32,7 @@ export class MilestoneConfig {
       };
     }
 
-    // Linear search through milestones
-    // Note: Array is expected to be small (~10-20 entries max)
+    // First, try to find exact match in milestone ranges
     for (const milestone of MILESTONES) {
       if (
         signatureNumber >= milestone.min &&
@@ -41,6 +42,30 @@ export class MilestoneConfig {
           milestone,
           isDefault: false,
         };
+      }
+    }
+
+    // If no exact match, check if position falls in a gap
+    // Gap positions should display the milestone they logically belong to
+    for (let i = 0; i < MILESTONE_BOUNDARIES.length; i++) {
+      const boundary = MILESTONE_BOUNDARIES[i];
+
+      // Check if position is in this milestone's gap
+      if (
+        signatureNumber >= boundary.gapStart &&
+        signatureNumber <= boundary.gapEnd
+      ) {
+        // Return the milestone that precedes this gap
+        const milestoneIndex = i;
+        if (milestoneIndex < MILESTONES.length) {
+          console.info(
+            `Position #${signatureNumber} is in gap (${boundary.gapStart}-${boundary.gapEnd}). Using Milestone ${milestoneIndex + 1} styling.`
+          );
+          return {
+            milestone: MILESTONES[milestoneIndex],
+            isDefault: false,
+          };
+        }
       }
     }
 

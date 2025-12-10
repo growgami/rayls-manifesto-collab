@@ -351,6 +351,12 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // Early return: If referral data already exists and is not processing, skip further checks
+      // This prevents redundant database queries on every authenticated request
+      if (token.referralData && !token.referralProcessing && !token.referralJobId) {
+        return token;
+      }
+
       // Check if referral is still processing
       else if (token.referralProcessing && token.referralJobId) {
         const db = await getDatabase();

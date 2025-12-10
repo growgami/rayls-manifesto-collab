@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface ReferralStatus {
   status: 'idle' | 'pending' | 'processing' | 'completed' | 'failed' | 'not_found';
@@ -13,6 +14,7 @@ export function useReferralStatus(shouldPoll: boolean) {
   const [status, setStatus] = useState<ReferralStatus>({ status: 'idle' });
   const [pollCount, setPollCount] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { update } = useSession();
 
   useEffect(() => {
     if (!shouldPoll) {
@@ -35,6 +37,11 @@ export function useReferralStatus(shouldPoll: boolean) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+          }
+
+          // Force session refresh to update useAuth and useUserReferral hooks
+          if (data.status === 'completed') {
+            await update();
           }
         }
 
